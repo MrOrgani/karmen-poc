@@ -1,0 +1,14 @@
+{
+  "name": "karmen-poc",
+  "private": true,
+  "workspaces": ["backend", "frontend"],
+  "scripts": {
+    "dev": "concurrently -n back,front -c blue,green \"npm:dev:back\" \"npm:dev:front\"",
+    "dev:back": "npm run start:dev --workspace=backend",
+    "dev:front": "npm run dev --workspace=frontend",
+    "build": "npm run build --workspaces"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
