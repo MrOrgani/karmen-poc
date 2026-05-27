@@ -16,6 +16,7 @@ import {
 import { CheckCircle2, HelpCircle, XCircle, FileSignature, Loader2, ArrowRight } from 'lucide-react';
 import { recordDecision, type DecisionType } from '@/lib/api';
 import { useDossierId } from './CockpitContext';
+import { useHighlight } from './RuleHighlightContext';
 import type { AugmentedDossier, RiskBucket, ScoreExplanation } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
@@ -46,11 +47,11 @@ const BUCKET_BADGE: Record<RiskBucket, string> = {
 type Props = {
   score: AugmentedDossier['score'];
   explanation: ScoreExplanation;
-  onHighlight: (codes: string[]) => void;
 };
 
-export function DecisionPanel({ score, explanation, onHighlight }: Props) {
+export function DecisionPanel({ score, explanation }: Props) {
   const dossierId = useDossierId();
+  const highlight = useHighlight();
   const [justification, setJustification] = useState('');
   const [status, setStatus] = useState<Status>({ phase: 'idle' });
 
@@ -98,7 +99,7 @@ export function DecisionPanel({ score, explanation, onHighlight }: Props) {
               <li key={idx}>
                 <button
                   type="button"
-                  onClick={() => onHighlight(bullet.ruleCodes)}
+                  onClick={() => highlight(bullet.ruleCodes)}
                   className="group w-full text-left flex items-center gap-2 rounded-md border border-karmen-border-blue/60 bg-white px-3 py-2 hover:bg-karmen-pale-blue/60 hover:border-karmen-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-karmen-blue focus-visible:ring-offset-1 transition-colors motion-reduce:transition-none cursor-pointer"
                 >
                   <span aria-hidden className="inline-block h-1.5 w-1.5 rounded-full bg-karmen-blue shrink-0" />

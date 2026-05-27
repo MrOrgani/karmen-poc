@@ -4,6 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "sync-types": "node ../scripts/sync-types.mjs",
+    "predev": "npm run sync-types",
+    "prebuild": "npm run sync-types",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",

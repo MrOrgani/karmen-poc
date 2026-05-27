@@ -3,10 +3,10 @@ import type { MetricStatus, RedFlagCategory, RuleDiagnosticItem } from '@/lib/ty
 import { cn } from '@/lib/utils';
 import { Info, Landmark, ListChecks, TrendingUp } from 'lucide-react';
 import { SectionCard } from './SectionCard';
+import { useHighlightedCodes } from './RuleHighlightContext';
 
 type Props = {
   items: RuleDiagnosticItem[];
-  highlightedCodes?: ReadonlySet<string>;
 };
 
 const DOT_CLASS: Record<MetricStatus, string> = {
@@ -37,7 +37,8 @@ const CATEGORY_META: Record<RedFlagCategory, { title: string; icon: typeof Trend
 
 const CATEGORY_ORDER: RedFlagCategory[] = ['financial', 'bank'];
 
-export function RulesDiagnostic({ items, highlightedCodes }: Props) {
+export function RulesDiagnostic({ items }: Props) {
+  const highlightedCodes = useHighlightedCodes();
   const grouped: Record<RedFlagCategory, RuleDiagnosticItem[]> = { financial: [], bank: [] };
   for (const item of items) grouped[item.category].push(item);
 
@@ -61,7 +62,7 @@ export function RulesDiagnostic({ items, highlightedCodes }: Props) {
               <ul className="space-y-1.5">
                 {list.map((item) => {
                   const status = item.unavailableReason ? 'unknown' : item.status;
-                  const highlighted = highlightedCodes?.has(item.code) ?? false;
+                  const highlighted = highlightedCodes.has(item.code);
                   return (
                     <li
                       key={item.code}

@@ -1,37 +1,27 @@
 import { Injectable } from '@nestjs/common';
+import { documentRequirementsFor } from '../dossiers/document-requirements';
 import type {
   AugmentedDossier,
   CompletenessResult,
-  FinancingType,
   MissingItem,
 } from '../dossiers/types';
-
-type CompletenessRules = {
-  liasseFiscaleMinCount: number;
-  minMonthsPerBankAccount: number;
-};
-
-const RULES: Record<FinancingType, CompletenessRules> = {
-  loan: { liasseFiscaleMinCount: 2, minMonthsPerBankAccount: 12 },
-  factoring: { liasseFiscaleMinCount: 2, minMonthsPerBankAccount: 12 },
-};
 
 @Injectable()
 export class CompletenessEngine {
   check(dossier: AugmentedDossier): CompletenessResult {
-    const requirements = RULES[dossier.financing_request.type];
+    const requirements = documentRequirementsFor(dossier.financing_request.type);
     const missing: MissingItem[] = [];
 
     const liasses = dossier.documents.filter(
       (d) => d.type === 'liasse_fiscale',
     );
-    if (liasses.length < requirements.liasseFiscaleMinCount) {
+    if (liasses.length < requirements.minLiasses) {
       missing.push({
         type: 'liasse_fiscale',
-        reason: `${liasses.length}/${requirements.liasseFiscaleMinCount} liasses fournies`,
+        reason: `${liasses.length}/${requirements.minLiasses} liasses fournies`,
         details: {
           provided: liasses.length,
-          required: requirements.liasseFiscaleMinCount,
+          required: requirements.minLiasses,
         },
       });
     }

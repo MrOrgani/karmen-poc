@@ -1,14 +1,18 @@
 import type { AugmentedDossier, DataCoverage } from './types';
-
-const EXPECTED_BANK_MONTHS = 12;
+import { documentRequirementsFor } from './document-requirements';
 
 /**
  * Dérive la couverture documentaire d'un dossier — quels KPIs sont calculables
  * et lesquels reposent sur une extrapolation. Pivot de l'Option 2 hybride :
  * hard-gating (revenuePreviousYear nullifiée) + soft-gating (UI signale les
- * KPIs bancaires extrapolés sous EXPECTED_BANK_MONTHS).
+ * KPIs bancaires extrapolés sous le seuil minimum requis).
+ *
+ * Les seuils proviennent de `documentRequirementsFor(type)` — source unique
+ * partagée avec CompletenessEngine.
  */
 export function computeDataCoverage(dossier: AugmentedDossier): DataCoverage {
+  const requirements = documentRequirementsFor(dossier.financing_request.type);
+
   const liasseYears = dossier.documents
     .filter((d) => d.type === 'liasse_fiscale')
     .map((d) => d.metadata.year)
@@ -16,7 +20,8 @@ export function computeDataCoverage(dossier: AugmentedDossier): DataCoverage {
 
   const maxYear = liasseYears.length > 0 ? Math.max(...liasseYears) : null;
   const hasLiassePreviousYear =
-    maxYear !== null && liasseYears.includes(maxYear - 1);
+    !requirements.requirePreviousYearLiasse ||
+    (maxYear !== null && liasseYears.includes(maxYear - 1));
 
   const releves = dossier.documents.filter(
     (d) => d.type === 'releve_bancaire',
@@ -37,6 +42,6 @@ export function computeDataCoverage(dossier: AugmentedDossier): DataCoverage {
   return {
     hasLiassePreviousYear,
     bankMonthsCovered,
-    bankCoverageFull: bankMonthsCovered >= EXPECTED_BANK_MONTHS,
+    bankCoverageFull: bankMonthsCovered >= requirements.minMonthsPerBankAccount,
   };
 }

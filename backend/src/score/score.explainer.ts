@@ -6,6 +6,7 @@ import type {
   ScoreExplanation,
   Severity,
 } from '../dossiers/types';
+import { SCORE_THEMES } from '../rule-engine/rule-engine';
 
 const MAX_BULLETS = 3;
 
@@ -14,12 +15,6 @@ const SEVERITY_RANK: Record<Severity, number> = { high: 2, medium: 1, low: 0 };
 const PROFITABILITY_CODES = ['EBITDA_MARGIN_LOW', 'NEGATIVE_NET_INCOME', 'REVENUE_DECLINING'];
 const DEBT_CODES = ['DEBT_TO_EBITDA_HIGH', 'DEBT_TO_EBITDA_MEDIUM', 'EBITDA_NEGATIVE_OR_ZERO'];
 const CASH_CODES = ['OVERDRAFT_DAYS_HIGH', 'LOW_CASH_POSITION', 'REJECTED_PAYMENTS', 'DSO_LONG'];
-
-// Codes diagnostic (rules-diagnostic.ts) ciblés par chaque bullet — utilisés
-// par DecisionPanel pour scroller + highlight les indicateurs concernés.
-const PROFITABILITY_RULE_CODES = ['ebitda_margin', 'net_income', 'revenue_evolution'];
-const DEBT_RULE_CODES = ['debt_to_ebitda', 'ebitda_positive'];
-const CASH_RULE_CODES = ['cash_position', 'overdraft_days', 'rejected_payments', 'dso', 'flows_balance'];
 
 function pickMostSevere(flags: RedFlag[], codes: string[]): RedFlag | undefined {
   return flags
@@ -58,10 +53,12 @@ export class ScoreExplainer {
       ? this.cashProblemBullet(fin, bank, cashFlag)
       : `Trésorerie saine et flux bancaires sans anomalie`;
 
+    // Les ruleCodes sont désormais dérivés du RuleEngine (SCORE_THEMES) —
+    // plus de duplication, mapping vérifié à la compile via RuleCode.
     const bullets: ScoreBullet[] = [
-      { text: profitabilityText, ruleCodes: PROFITABILITY_RULE_CODES },
-      { text: debtText, ruleCodes: DEBT_RULE_CODES },
-      { text: cashText, ruleCodes: CASH_RULE_CODES },
+      { text: profitabilityText, ruleCodes: [...SCORE_THEMES.profitability] },
+      { text: debtText, ruleCodes: [...SCORE_THEMES.debt] },
+      { text: cashText, ruleCodes: [...SCORE_THEMES.cash] },
     ];
 
     return { bullets: bullets.slice(0, MAX_BULLETS) };
