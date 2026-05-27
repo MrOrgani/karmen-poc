@@ -3,7 +3,7 @@ import type { QueryClient } from '@tanstack/react-query';
 import { rootRoute } from './routes/__root';
 import { indexRoute } from './routes/index';
 import { dossierRoute } from './routes/dossiers.$id';
-import { RouteErrorBoundary, RouteNotFound } from './components/RouteErrorBoundary';
+import { RouteErrorBoundary, RouteNotFound } from '@/shared/components/RouteErrorBoundary';
 
 export type RouterContext = { queryClient: QueryClient };
 

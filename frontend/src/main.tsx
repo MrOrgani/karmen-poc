@@ -4,7 +4,7 @@ import { RouterProvider } from '@tanstack/react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import './index.css';
 import { createAppRouter } from './router';
-import { ApiError } from './lib/api';
+import { ApiError } from '@/shared/lib/http';
 
 const queryClient = new QueryClient({
   defaultOptions: {

@@ -13,7 +13,7 @@ import { fileURLToPath } from 'node:url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
 const SOURCE = join(ROOT, 'backend/src/dossiers/types.ts');
-const TARGET = join(ROOT, 'frontend/src/lib/api-types.gen.ts');
+const TARGET = join(ROOT, 'frontend/src/shared/types/api.gen.ts');
 
 if (!existsSync(SOURCE)) {
   console.error(`[sync-types] source introuvable : ${SOURCE}`);
