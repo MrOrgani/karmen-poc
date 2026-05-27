@@ -1,5 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import type { AugmentedDossier, RedFlag, ScoreExplanation, Severity } from '../dossiers/types';
+import type {
+  AugmentedDossier,
+  RedFlag,
+  ScoreBullet,
+  ScoreExplanation,
+  Severity,
+} from '../dossiers/types';
 
 const MAX_BULLETS = 3;
 
@@ -8,6 +14,12 @@ const SEVERITY_RANK: Record<Severity, number> = { high: 2, medium: 1, low: 0 };
 const PROFITABILITY_CODES = ['EBITDA_MARGIN_LOW', 'NEGATIVE_NET_INCOME', 'REVENUE_DECLINING'];
 const DEBT_CODES = ['DEBT_TO_EBITDA_HIGH', 'DEBT_TO_EBITDA_MEDIUM', 'EBITDA_NEGATIVE_OR_ZERO'];
 const CASH_CODES = ['OVERDRAFT_DAYS_HIGH', 'LOW_CASH_POSITION', 'REJECTED_PAYMENTS', 'DSO_LONG'];
+
+// Codes diagnostic (rules-diagnostic.ts) ciblés par chaque bullet — utilisés
+// par DecisionPanel pour scroller + highlight les indicateurs concernés.
+const PROFITABILITY_RULE_CODES = ['ebitda_margin', 'net_income', 'revenue_evolution'];
+const DEBT_RULE_CODES = ['debt_to_ebitda', 'ebitda_positive'];
+const CASH_RULE_CODES = ['cash_position', 'overdraft_days', 'rejected_payments', 'dso', 'flows_balance'];
 
 function pickMostSevere(flags: RedFlag[], codes: string[]): RedFlag | undefined {
   return flags
@@ -26,26 +38,33 @@ export class ScoreExplainer {
 
     const margin = fin.revenue > 0 ? (fin.ebitda / fin.revenue) * 100 : 0;
     const debtRatio = fin.ebitda > 0 ? fin.totalDebt / fin.ebitda : Infinity;
+    const prevRevenue = fin.revenuePreviousYear ?? 0;
     const revenueDelta =
-      fin.revenuePreviousYear > 0 ? ((fin.revenue - fin.revenuePreviousYear) / fin.revenuePreviousYear) * 100 : 0;
+      prevRevenue > 0 ? ((fin.revenue - prevRevenue) / prevRevenue) * 100 : 0;
 
-    const profitabilityBullet = profitabilityFlag
+    const profitabilityText = profitabilityFlag
       ? profitabilityFlag.code === 'REVENUE_DECLINING'
         ? `Activité en repli : CA ${revenueDelta.toFixed(1)}% vs N-1 (marge EBITDA ${margin.toFixed(1)}%)`
         : `Rentabilité dégradée : marge EBITDA ${margin.toFixed(1)}%${fin.netIncome < 0 ? ', résultat net négatif' : ''}`
       : `Rentabilité opérationnelle correcte (marge EBITDA ${margin.toFixed(1)}%)`;
 
-    const debtBullet = debtFlag
+    const debtText = debtFlag
       ? debtFlag.code === 'EBITDA_NEGATIVE_OR_ZERO'
         ? `Capacité de remboursement nulle : EBITDA ${fin.ebitda.toLocaleString('fr-FR')} €`
         : `Endettement préoccupant : ${debtRatio.toFixed(1)}× l'EBITDA`
       : `Endettement absorbable (${debtRatio.toFixed(2)}× d'EBITDA)`;
 
-    const cashBullet = cashFlag
+    const cashText = cashFlag
       ? this.cashProblemBullet(fin, bank, cashFlag)
       : `Trésorerie saine et flux bancaires sans anomalie`;
 
-    return { bullets: [profitabilityBullet, debtBullet, cashBullet].slice(0, MAX_BULLETS) };
+    const bullets: ScoreBullet[] = [
+      { text: profitabilityText, ruleCodes: PROFITABILITY_RULE_CODES },
+      { text: debtText, ruleCodes: DEBT_RULE_CODES },
+      { text: cashText, ruleCodes: CASH_RULE_CODES },
+    ];
+
+    return { bullets: bullets.slice(0, MAX_BULLETS) };
   }
 
   private cashProblemBullet(

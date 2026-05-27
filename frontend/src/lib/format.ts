@@ -25,8 +25,8 @@ export function formatPercent(value: number): string {
   return PERCENT.format(value / 100);
 }
 
-export function formatDelta(current: number, previous: number): string {
-  if (!Number.isFinite(current) || !Number.isFinite(previous) || previous <= 0) return '—';
+export function formatDelta(current: number, previous: number | null): string {
+  if (previous === null || !Number.isFinite(current) || !Number.isFinite(previous) || previous <= 0) return '—';
   const delta = ((current - previous) / previous) * 100;
   const sign = delta >= 0 ? '+' : '';
   return `${sign}${delta.toFixed(1)}${NBSP}%`;

@@ -1,21 +1,20 @@
-import { useEffect } from 'react';
-import { Link, createRoute, useParams } from '@tanstack/react-router';
-import { useQuery, queryOptions } from '@tanstack/react-query';
-import { track } from '@/lib/track';
-import { Skeleton } from '@/components/ui/skeleton';
+import { BankFlowsCard } from '@/components/cockpit/BankFlowsCard';
+import { CockpitProvider } from '@/components/cockpit/CockpitContext';
+import { CompletenessSection } from '@/components/cockpit/CompletenessSection';
+import { DecisionPanel } from '@/components/cockpit/DecisionPanel';
+import { FinancialIndicators } from '@/components/cockpit/FinancialIndicators';
+import { CockpitHeader } from '@/components/cockpit/Header';
+import { RulesDiagnostic } from '@/components/cockpit/RulesDiagnostic';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, ArrowLeft } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { ApiError, getCockpit } from '@/lib/api';
+import { track } from '@/lib/track';
+import { queryOptions, useQuery } from '@tanstack/react-query';
+import { Link, createRoute, useParams } from '@tanstack/react-router';
+import { AlertCircle, ArrowLeft } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { rootRoute } from './__root';
-import { CockpitProvider } from '@/components/cockpit/CockpitContext';
-import { CockpitHeader } from '@/components/cockpit/Header';
-import { RedFlagsBanner } from '@/components/cockpit/RedFlagsBanner';
-import { CompletenessSection } from '@/components/cockpit/CompletenessSection';
-import { ScoreCard } from '@/components/cockpit/ScoreCard';
-import { FinancialIndicators } from '@/components/cockpit/FinancialIndicators';
-import { BankFlowsCard } from '@/components/cockpit/BankFlowsCard';
-import { DecisionPanel } from '@/components/cockpit/DecisionPanel';
 
 const cockpitQuery = (id: string) =>
   queryOptions({
@@ -23,13 +22,34 @@ const cockpitQuery = (id: string) =>
     queryFn: () => getCockpit(id),
   });
 
+const HIGHLIGHT_DURATION_MS = 1800;
+
 function CockpitPage() {
   const { id } = useParams({ from: '/dossiers/$id' });
   const { data: cockpit, isPending, error } = useQuery(cockpitQuery(id));
 
+  const [highlightedCodes, setHighlightedCodes] = useState<ReadonlySet<string>>(() => new Set());
+  const timerRef = useRef<number | null>(null);
+
   useEffect(() => {
     track('dossier.opened', id);
   }, [id]);
+
+  useEffect(() => () => {
+    if (timerRef.current !== null) window.clearTimeout(timerRef.current);
+  }, []);
+
+  const handleHighlight = useCallback((codes: string[]) => {
+    if (codes.length === 0) return;
+    setHighlightedCodes(new Set(codes));
+    const target = document.getElementById(`rule-${codes[0]}`);
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (timerRef.current !== null) window.clearTimeout(timerRef.current);
+    timerRef.current = window.setTimeout(() => {
+      setHighlightedCodes(new Set());
+      timerRef.current = null;
+    }, HIGHLIGHT_DURATION_MS);
+  }, []);
 
   if (isPending) {
     return (
@@ -72,11 +92,25 @@ function CockpitPage() {
       <div className="space-y-4">
         <CockpitHeader dossier={cockpit.dossier} />
         <CompletenessSection completeness={cockpit.completeness} documents={cockpit.dossier.documents} />
-        <RedFlagsBanner redFlags={cockpit.redFlags} />
-        <ScoreCard score={cockpit.dossier.score} explanation={cockpit.scoreExplanation} />
-        <FinancialIndicators fin={cockpit.dossier.financialIndicators} />
-        <BankFlowsCard bank={cockpit.dossier.bankFlows} />
-        <DecisionPanel />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <FinancialIndicators
+            fin={cockpit.dossier.financialIndicators}
+            thresholds={cockpit.financialThresholds}
+            statuses={cockpit.metricStatuses}
+          />
+          <BankFlowsCard
+            bank={cockpit.dossier.bankFlows}
+            thresholds={cockpit.financialThresholds}
+            statuses={cockpit.metricStatuses}
+            coverage={cockpit.dataCoverage}
+          />
+        </div>
+        <RulesDiagnostic items={cockpit.rulesDiagnostic} highlightedCodes={highlightedCodes} />
+        <DecisionPanel
+          score={cockpit.dossier.score}
+          explanation={cockpit.scoreExplanation}
+          onHighlight={handleHighlight}
+        />
       </div>
     </CockpitProvider>
   );

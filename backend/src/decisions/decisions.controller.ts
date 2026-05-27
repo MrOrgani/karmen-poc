@@ -40,8 +40,10 @@ export class DecisionsController {
     const justification =
       typeof body.justification === 'string' ? body.justification.slice(0, MAX_JUSTIFICATION) : '';
     const ts = Date.now();
+    // Sanitize control chars before logging to prevent log injection.
+    const logSafeJustif = justification.replace(/[\r\n\x00-\x1f\x7f]/g, ' ').slice(0, 80);
     this.logger.log(
-      `📝 [DecisionsController.record] dossier=${body.dossierId} decision=${body.decision} justif="${justification}"`,
+      `📝 [DecisionsController.record] dossier=${body.dossierId} decision=${body.decision} justifPreview="${logSafeJustif}"`,
     );
     this.events.push({
       ts,

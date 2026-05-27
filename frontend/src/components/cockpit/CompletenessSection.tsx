@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import type { AugmentedDossier, CompletenessResult } from '@/lib/types';
-import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { CollapsibleSection } from './CollapsibleSection';
 import { RelanceModal } from './RelanceModal';
@@ -38,8 +37,7 @@ function DocIcon({ type }: { type: AugmentedDossier['documents'][number]['type']
 
 export function CompletenessSection({ completeness, documents }: Props) {
   const dossierId = useDossierId();
-  const { score, isComplete, missing } = completeness;
-  const clamped = Math.max(0, Math.min(100, score));
+  const { isComplete, missing } = completeness;
   const [relanceOpen, setRelanceOpen] = useState(false);
 
   const openDoc = (docId: string, docName: string) => {
@@ -58,7 +56,7 @@ export function CompletenessSection({ completeness, documents }: Props) {
           'ml-2 inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-semibold',
           isComplete
             ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
-            : 'bg-destructive/10 text-destructive border-destructive/40',
+            : 'bg-amber-50 text-amber-800 border-amber-300',
         )}>
           {isComplete && <CheckCircle2 aria-hidden className="h-3 w-3" />}
           {isComplete ? 'Documents complets' : 'Documents manquants'}
@@ -66,12 +64,6 @@ export function CompletenessSection({ completeness, documents }: Props) {
       }
     >
       <div className="space-y-5">
-        <Progress
-          value={clamped}
-          className="h-2 [&>div]:bg-karmen-blue"
-          aria-label={isComplete ? 'Documents complets' : 'Documents manquants'}
-        />
-
         <section aria-labelledby="docs-provided">
           <h3 id="docs-provided" className="text-xs uppercase tracking-widest text-karmen-mute font-semibold mb-2">
             Documents fournis ({documents.length})
@@ -106,13 +98,13 @@ export function CompletenessSection({ completeness, documents }: Props) {
 
         {missing.length > 0 && (
           <section aria-labelledby="docs-missing">
-            <h3 id="docs-missing" className="text-xs uppercase tracking-widest text-destructive font-semibold mb-2">
+            <h3 id="docs-missing" className="text-xs uppercase tracking-widest text-amber-800 font-semibold mb-2">
               Pièces manquantes ({missing.length})
             </h3>
-            <ul className="space-y-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3">
+            <ul className="space-y-2 rounded-lg border border-amber-300 bg-amber-50 p-3">
               {missing.map((item, idx) => (
                 <li key={`${item.type}-${idx}`} className="flex items-start gap-2 text-sm text-karmen-ink">
-                  <AlertCircle aria-hidden className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+                  <AlertCircle aria-hidden className="h-4 w-4 text-amber-700 shrink-0 mt-0.5" />
                   <span>
                     <span className="font-medium">{TYPE_LABEL[item.type]} — </span>
                     {item.reason}

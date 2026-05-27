@@ -2,6 +2,8 @@ export type FinancingType = 'loan' | 'factoring';
 export type RiskBucket = 'low' | 'medium' | 'high';
 export type Severity = 'low' | 'medium' | 'high';
 export type DocumentType = 'liasse_fiscale' | 'releve_bancaire';
+export type MetricStatus = 'ok' | 'warn' | 'alert' | 'unknown';
+export type RedFlagCategory = 'financial' | 'bank';
 
 export type DossierSummary = {
   id: string;
@@ -24,7 +26,36 @@ export type RedFlag = {
   code: string;
   label: string;
   value: string;
+  threshold: string;
+  rationale: string;
+  category: RedFlagCategory;
 };
+
+export type MetricStatuses = {
+  revenue: MetricStatus;
+  ebitda: MetricStatus;
+  netIncome: MetricStatus;
+  totalDebt: MetricStatus;
+  cashPosition: MetricStatus;
+  dso: MetricStatus;
+  monthlyInflowsAverage: MetricStatus;
+  monthlyOutflowsAverage: MetricStatus;
+  overdraftDaysLast12m: MetricStatus;
+  rejectedPaymentsCount: MetricStatus;
+};
+
+export type DataCoverage = {
+  hasLiassePreviousYear: boolean;
+  bankMonthsCovered: number;
+  bankCoverageFull: boolean;
+};
+
+export type MetricThreshold = {
+  rule: string;
+  rationale: string;
+};
+
+export type FinancialThresholds = Record<string, MetricThreshold>;
 
 export type CompletenessResult = {
   score: number;
@@ -32,8 +63,24 @@ export type CompletenessResult = {
   missing: MissingItem[];
 };
 
+export type ScoreBullet = {
+  text: string;
+  ruleCodes: string[];
+};
+
 export type ScoreExplanation = {
-  bullets: string[];
+  bullets: ScoreBullet[];
+};
+
+export type RuleDiagnosticItem = {
+  code: string;
+  category: RedFlagCategory;
+  label: string;
+  status: MetricStatus;
+  value: string;
+  unavailableReason?: string;
+  threshold: string;
+  rationale: string;
 };
 
 export type AugmentedDossier = {
@@ -77,7 +124,7 @@ export type AugmentedDossier = {
   };
   financialIndicators: {
     revenue: number;
-    revenuePreviousYear: number;
+    revenuePreviousYear: number | null;
     ebitda: number;
     netIncome: number;
     totalDebt: number;
@@ -97,4 +144,8 @@ export type CockpitResponse = {
   completeness: CompletenessResult;
   redFlags: RedFlag[];
   scoreExplanation: ScoreExplanation;
+  financialThresholds: FinancialThresholds;
+  metricStatuses: MetricStatuses;
+  dataCoverage: DataCoverage;
+  rulesDiagnostic: RuleDiagnosticItem[];
 };

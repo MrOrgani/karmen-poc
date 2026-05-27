@@ -13,9 +13,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { CheckCircle2, HelpCircle, XCircle, FileSignature, Loader2 } from 'lucide-react';
+import { CheckCircle2, HelpCircle, XCircle, FileSignature, Loader2, ArrowRight } from 'lucide-react';
 import { recordDecision, type DecisionType } from '@/lib/api';
 import { useDossierId } from './CockpitContext';
+import type { AugmentedDossier, RiskBucket, ScoreExplanation } from '@/lib/types';
+import { cn } from '@/lib/utils';
+
 type Status =
   | { phase: 'idle' }
   | { phase: 'submitting'; decision: DecisionType }
@@ -28,7 +31,25 @@ const LABEL: Record<DecisionType, string> = {
   reject: 'refusé',
 };
 
-export function DecisionPanel() {
+const BUCKET_LABEL: Record<RiskBucket, string> = {
+  low: 'Risque faible',
+  medium: 'Risque modéré',
+  high: 'Risque élevé',
+};
+
+const BUCKET_BADGE: Record<RiskBucket, string> = {
+  low: 'bg-emerald-50 text-emerald-700 border-emerald-300',
+  medium: 'bg-amber-50 text-amber-800 border-amber-300',
+  high: 'bg-rose-50 text-rose-800 border-rose-300',
+};
+
+type Props = {
+  score: AugmentedDossier['score'];
+  explanation: ScoreExplanation;
+  onHighlight: (codes: string[]) => void;
+};
+
+export function DecisionPanel({ score, explanation, onHighlight }: Props) {
   const dossierId = useDossierId();
   const [justification, setJustification] = useState('');
   const [status, setStatus] = useState<Status>({ phase: 'idle' });
@@ -37,7 +58,6 @@ export function DecisionPanel() {
     setStatus({ phase: 'submitting', decision });
     try {
       const res = await recordDecision(dossierId, decision, justification);
-      // Backend pushes `decision.made` to EventsStore — no front-side track() to avoid double counting.
       setStatus({ phase: 'done', decision, ts: res.ts });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -59,6 +79,40 @@ export function DecisionPanel() {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        <section
+          aria-label="Synthèse pour décision"
+          className="rounded-lg border border-karmen-border-blue/60 bg-karmen-pale-blue/30 p-3 space-y-3"
+        >
+          <div className="flex flex-wrap items-baseline gap-2">
+            <span className="text-[10px] uppercase tracking-widest font-semibold text-karmen-mute">Score Karmen estimé</span>
+            <span className={cn('inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-semibold', BUCKET_BADGE[score.risk_bucket])}>
+              <span className="tabular-nums">{score.global_score}/100</span>
+              <span className="opacity-80">· {BUCKET_LABEL[score.risk_bucket]}</span>
+            </span>
+          </div>
+          <p className="text-[11px] text-karmen-mute italic">
+            Clique sur une ligne pour situer les règles concernées dans le diagnostic.
+          </p>
+          <ul className="space-y-1.5 text-sm">
+            {explanation.bullets.map((bullet, idx) => (
+              <li key={idx}>
+                <button
+                  type="button"
+                  onClick={() => onHighlight(bullet.ruleCodes)}
+                  className="group w-full text-left flex items-center gap-2 rounded-md border border-karmen-border-blue/60 bg-white px-3 py-2 hover:bg-karmen-pale-blue/60 hover:border-karmen-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-karmen-blue focus-visible:ring-offset-1 transition-colors motion-reduce:transition-none cursor-pointer"
+                >
+                  <span aria-hidden className="inline-block h-1.5 w-1.5 rounded-full bg-karmen-blue shrink-0" />
+                  <span className="text-karmen-ink flex-1">{bullet.text}</span>
+                  <ArrowRight
+                    aria-hidden
+                    className="h-3.5 w-3.5 shrink-0 text-karmen-blue transition-transform motion-reduce:transition-none group-hover:translate-x-0.5"
+                  />
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+
         <div className="flex flex-wrap gap-2">
           <Button
             onClick={() => handle('approve')}

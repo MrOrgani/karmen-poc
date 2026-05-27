@@ -2,6 +2,8 @@ export type FinancingType = 'loan' | 'factoring';
 export type RiskBucket = 'low' | 'medium' | 'high';
 export type DocumentType = 'liasse_fiscale' | 'releve_bancaire';
 export type Severity = 'low' | 'medium' | 'high';
+export type MetricStatus = 'ok' | 'warn' | 'alert' | 'unknown';
+export type RedFlagCategory = 'financial' | 'bank';
 
 export type DossierDocument = {
   id: string;
@@ -19,7 +21,8 @@ export type DossierDocument = {
 
 export type FinancialIndicators = {
   revenue: number;
-  revenuePreviousYear: number;
+  /** null si la liasse N-1 est manquante côté dossier — comparaison non calculable. */
+  revenuePreviousYear: number | null;
   ebitda: number;
   netIncome: number;
   totalDebt: number;
@@ -87,10 +90,68 @@ export type RedFlag = {
   code: string;
   label: string;
   value: string;
+  /** Human-readable threshold (e.g. "Dette > 5× EBITDA"). */
+  threshold: string;
+  /** One-sentence rationale of why this rule matters for credit analysis. */
+  rationale: string;
+  category: RedFlagCategory;
+};
+
+/** Per-KPI evaluation against reference thresholds — drives color coding in the UI. */
+export type MetricStatuses = {
+  revenue: MetricStatus;
+  ebitda: MetricStatus;
+  netIncome: MetricStatus;
+  totalDebt: MetricStatus;
+  cashPosition: MetricStatus;
+  dso: MetricStatus;
+  monthlyInflowsAverage: MetricStatus;
+  monthlyOutflowsAverage: MetricStatus;
+  overdraftDaysLast12m: MetricStatus;
+  rejectedPaymentsCount: MetricStatus;
+};
+
+/**
+ * Couverture documentaire dérivée des `documents` du dossier — utilisée par
+ * l'UI pour signaler les KPIs non calculables ou extrapolés (Option 2 hybride).
+ */
+export type DataCoverage = {
+  hasLiassePreviousYear: boolean;
+  /** Minimum mois couverts par compte bancaire (12 attendus). */
+  bankMonthsCovered: number;
+  bankCoverageFull: boolean;
+};
+
+/** Reference threshold for a single financial metric, exposed to the front for tooltips. */
+export type MetricThreshold = {
+  rule: string;
+  rationale: string;
+};
+
+/** Map of metric key → reference threshold. Keys are stable identifiers used by the front. */
+export type FinancialThresholds = Record<string, MetricThreshold>;
+
+export type ScoreBullet = {
+  text: string;
+  /** Codes des indicateurs (RuleDiagnosticItem.code) que ce bullet couvre — sert au scroll/highlight depuis le DecisionPanel. */
+  ruleCodes: string[];
 };
 
 export type ScoreExplanation = {
-  bullets: string[];
+  bullets: ScoreBullet[];
+};
+
+export type RuleDiagnosticItem = {
+  code: string;
+  category: RedFlagCategory;
+  label: string;
+  status: MetricStatus;
+  /** Valeur formatée pour affichage (toujours renseignée si status != 'unknown'). */
+  value: string;
+  /** Raison lisible si le KPI n'est pas calculable (status === 'unknown'). */
+  unavailableReason?: string;
+  threshold: string;
+  rationale: string;
 };
 
 export type CockpitResponse = {
@@ -98,6 +159,10 @@ export type CockpitResponse = {
   completeness: CompletenessResult;
   redFlags: RedFlag[];
   scoreExplanation: ScoreExplanation;
+  financialThresholds: FinancialThresholds;
+  metricStatuses: MetricStatuses;
+  dataCoverage: DataCoverage;
+  rulesDiagnostic: RuleDiagnosticItem[];
 };
 
 export type DossierSummary = {

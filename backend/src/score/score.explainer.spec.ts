@@ -25,9 +25,9 @@ describe('ScoreExplainer', () => {
     expect(flags).toEqual([]);
     const { bullets } = explainer.explain(dossier, flags);
     expect(bullets).toHaveLength(3);
-    expect(bullets.some((b) => b.toLowerCase().includes('rentab'))).toBe(true);
-    expect(bullets.some((b) => b.toLowerCase().includes('endett'))).toBe(true);
-    expect(bullets.some((b) => b.toLowerCase().includes('trésor') || b.toLowerCase().includes('bancaire'))).toBe(true);
+    expect(bullets.some((b) => b.text.toLowerCase().includes('rentab'))).toBe(true);
+    expect(bullets.some((b) => b.text.toLowerCase().includes('endett'))).toBe(true);
+    expect(bullets.some((b) => b.text.toLowerCase().includes('trésor') || b.text.toLowerCase().includes('bancaire'))).toBe(true);
   });
 
   it('REVENUE_DECLINING seul — bullet rentabilité évoque l’activité en repli', () => {
@@ -37,7 +37,7 @@ describe('ScoreExplainer', () => {
     const flags = detector.detect(fin, bank);
     expect(flags.some((f) => f.code === 'REVENUE_DECLINING')).toBe(true);
     const { bullets } = explainer.explain(dossier, flags);
-    expect(bullets[0]).toMatch(/repli|baisse|N-1/i);
+    expect(bullets[0].text).toMatch(/repli|baisse|N-1/i);
   });
 
   it('DSO_LONG seul — bullet trésorerie évoque le DSO', () => {
@@ -47,7 +47,7 @@ describe('ScoreExplainer', () => {
     const flags = detector.detect(fin, bank);
     expect(flags.some((f) => f.code === 'DSO_LONG')).toBe(true);
     const { bullets } = explainer.explain(dossier, flags);
-    expect(bullets[2]).toMatch(/DSO|jours/i);
+    expect(bullets[2].text).toMatch(/DSO|jours/i);
   });
 
   it('Transport Leclerc-like — au moins un bullet évoque l’endettement ou les découverts', () => {
@@ -58,7 +58,7 @@ describe('ScoreExplainer', () => {
     const { bullets } = explainer.explain(dossier, flags);
     expect(bullets.length).toBeLessThanOrEqual(3);
     expect(bullets.length).toBeGreaterThan(0);
-    expect(bullets.some((b) => /endett|découvert|rentab/i.test(b))).toBe(true);
+    expect(bullets.some((b) => /endett|découvert|rentab/i.test(b.text))).toBe(true);
   });
 
   it('toujours ≤ 3 bullets quelle que soit la quantité de red flags', () => {
