@@ -7,6 +7,17 @@
 - **Auth / CORS allowlist** — explicitly out-of-POC-scope, but the production cockpit must enforce both before exposing financial data.
 - **Duplicate liasse-year detection** — current rule counts liasses without checking distinct years; a dossier with two copies of the 2024 liasse passes. Add a `distinct(year)` check.
 
+## Deferred from: code review bloc 3 — relances/decisions/events (2026-05-27)
+
+- **XSS / template injection mock email** — `RelancesService.draft` interpole `company.owner`, `company.name`, `req.amount` etc. directement dans `subject`/`body` sans sanitisation. À durcir au branchement LLM réel (escape HTML, validation strict).
+- **CORS allowlist + CSRF** — `app.enableCors()` ouvert, pas de CSRF token. Out-of-scope POC mais critique en prod.
+- **`EventType | string`** — union discriminée défaite. Front et back déclarent leur propre union ; envisager type partagé via package workspace ou OpenAPI generator.
+- **`res.on('close')`** — la middleware tracking n'enregistre pas les requêtes abortées par le client (use `'close'` au lieu de `'finish'` pour les capturer).
+- **Idempotency `/decisions`** — POST peut être rejoué (double-clic, retry réseau). Ajouter un déduplicateur sur `(dossierId, ts within 5s)` ou un `Idempotency-Key` header.
+- **Batching `track()`** — chaque event = 1 fetch. Batcher via `queueMicrotask` + `sendBeacon` pour limiter les connexions browser sur usage intense.
+- **`EventsStore.all()` deep copy défensive** — actuellement shallow copy du tableau ; mutation par caller peut altérer un event historisé.
+- **`relance.sent` sans SMTP réel** — UX affiche "Envoyé ✓" sans vérification de delivery. PRD assume mock POC mais à clarifier visuellement (badge "Brouillon enregistré" ?).
+
 ## Deferred from: code review frontend cockpit (2026-05-27)
 
 - **Runtime validation côté front** (`lib/api.ts`) — `response.json() as T` sans validation ; à durcir avec zod si le contrat backend bouge.

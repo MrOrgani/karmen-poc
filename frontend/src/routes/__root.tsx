@@ -1,16 +1,5 @@
-import { createRootRoute, Link, Outlet } from '@tanstack/react-router';
-
-function KarmenWordmark() {
-  return (
-    <Link to="/" className="inline-flex items-baseline gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60 rounded-sm">
-      <span className="text-white font-bold tracking-tight text-xl">KARMEN</span>
-      <span aria-hidden className="hidden sm:inline h-1 w-1 rounded-full bg-white/40" />
-      <span className="hidden sm:inline text-xs uppercase tracking-widest font-medium text-white/90">
-        Cockpit Analyste
-      </span>
-    </Link>
-  );
-}
+import { createRootRouteWithContext, Link, Outlet } from '@tanstack/react-router';
+import type { RouterContext } from '../router';
 
 function RootLayout() {
   return (
@@ -23,7 +12,9 @@ function RootLayout() {
       </a>
       <header className="bg-karmen-blue text-white">
         <div className="max-w-5xl mx-auto px-4 py-3.5 flex items-center justify-between">
-          <KarmenWordmark />
+          <Link to="/" className="inline-flex items-baseline gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60 rounded-sm">
+      <span className="text-white font-bold tracking-tight text-xl">KARMEN</span>
+    </Link>
         </div>
       </header>
       <main id="main-content" className="max-w-5xl mx-auto px-4 py-8">
@@ -33,4 +24,4 @@ function RootLayout() {
   );
 }
 
-export const rootRoute = createRootRoute({ component: RootLayout });
+export const rootRoute = createRootRouteWithContext<RouterContext>()({ component: RootLayout });

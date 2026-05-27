@@ -1,9 +1,13 @@
+import { useState } from 'react';
 import type { AugmentedDossier, CompletenessResult } from '@/lib/types';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { CollapsibleSection } from './CollapsibleSection';
+import { RelanceModal } from './RelanceModal';
 import { FileCheck2, MailPlus, AlertCircle, CheckCircle2, ExternalLink, FileText, Landmark } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+import { useDossierId } from './CockpitContext';
 
 type Props = {
   completeness: CompletenessResult;
@@ -19,7 +23,7 @@ function metaLine(doc: AugmentedDossier['documents'][number]): string {
   const parts: string[] = [TYPE_LABEL[doc.type]];
   if (doc.metadata.year) parts.push(String(doc.metadata.year));
   if (doc.metadata.bank) parts.push(doc.metadata.bank);
-  if (doc.metadata.months_covered !== undefined) parts.push(`${doc.metadata.months_covered} mois`);
+  if (doc.metadata.months_covered !== undefined) parts.push(`${doc.metadata.months_covered} mois`);
   return parts.join(' · ');
 }
 
@@ -33,12 +37,14 @@ function DocIcon({ type }: { type: AugmentedDossier['documents'][number]['type']
 }
 
 export function CompletenessSection({ completeness, documents }: Props) {
+  const dossierId = useDossierId();
   const { score, isComplete, missing } = completeness;
   const clamped = Math.max(0, Math.min(100, score));
+  const [relanceOpen, setRelanceOpen] = useState(false);
 
   const openDoc = (docId: string, docName: string) => {
-    console.log('📄 [CompletenessSection.openDoc]', { docId, docName });
-    alert(`Ouverture de "${docName}" — visualiseur de pièces wiring en prod (Holofin/Dataleon).`);
+    if (import.meta.env.DEV) console.log('📄 [CompletenessSection.openDoc]', { docId, docName });
+    // Visualiseur de pièces wiring en prod (Holofin/Dataleon).
   };
 
   return (
@@ -46,18 +52,25 @@ export function CompletenessSection({ completeness, documents }: Props) {
       title="Complétude documentaire"
       icon={<FileCheck2 aria-hidden className="h-4 w-4 text-karmen-blue" />}
       defaultOpen
+      sectionId="completeness"
       badge={
         <span className={cn(
-          'ml-2 inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold',
-          isComplete ? 'bg-karmen-lime text-karmen-marine' : 'bg-destructive/10 text-destructive',
+          'ml-2 inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-semibold',
+          isComplete
+            ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
+            : 'bg-destructive/10 text-destructive border-destructive/40',
         )}>
           {isComplete && <CheckCircle2 aria-hidden className="h-3 w-3" />}
-          {score}%
+          {isComplete ? 'Documents complets' : 'Documents manquants'}
         </span>
       }
     >
       <div className="space-y-5">
-        <Progress value={clamped} className="h-2 [&>div]:bg-karmen-blue" aria-label={`Complétude ${score}%`} />
+        <Progress
+          value={clamped}
+          className="h-2 [&>div]:bg-karmen-blue"
+          aria-label={isComplete ? 'Documents complets' : 'Documents manquants'}
+        />
 
         <section aria-labelledby="docs-provided">
           <h3 id="docs-provided" className="text-xs uppercase tracking-widest text-karmen-mute font-semibold mb-2">
@@ -70,8 +83,8 @@ export function CompletenessSection({ completeness, documents }: Props) {
                   <div className="flex items-center gap-3 min-w-0">
                     <DocIcon type={doc.type} />
                     <div className="min-w-0">
-                      <div className="text-sm font-medium text-karmen-ink truncate">{doc.name}</div>
-                      <div className="text-xs text-karmen-mute truncate">{metaLine(doc)}</div>
+                      <div className="text-sm font-medium text-karmen-ink truncate min-w-0">{doc.name}</div>
+                      <div className="text-xs text-karmen-mute truncate min-w-0">{metaLine(doc)}</div>
                     </div>
                   </div>
                   <button
@@ -114,13 +127,16 @@ export function CompletenessSection({ completeness, documents }: Props) {
           <Button
             variant={isComplete ? 'outline' : 'default'}
             className={isComplete ? 'border-karmen-border-blue' : 'bg-karmen-blue hover:bg-karmen-blue-dark'}
-            onClick={() => alert('Wiring en Bloc 3 (modale relance)')}
+            onClick={() => setRelanceOpen(true)}
           >
             <MailPlus aria-hidden className="h-4 w-4 mr-2" />
             Demander des pièces
           </Button>
         </div>
       </div>
+      {relanceOpen && (
+        <RelanceModal dossierId={dossierId} open={relanceOpen} onOpenChange={setRelanceOpen} />
+      )}
     </CollapsibleSection>
   );
 }

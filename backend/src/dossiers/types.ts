@@ -106,5 +106,6 @@ export type DossierSummary = {
   type: FinancingType;
   amount: number;
   riskBucket: RiskBucket;
+  globalScore: number;
   completenessScore: number;
 };

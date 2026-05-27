@@ -21,6 +21,7 @@ export class DossiersController {
       type: d.financing_request.type,
       amount: d.financing_request.amount,
       riskBucket: d.score.risk_bucket,
+      globalScore: d.score.global_score,
       completenessScore: this.completeness.check(d).score,
     }));
   }

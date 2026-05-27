@@ -10,9 +10,9 @@ const BUCKET_LABEL: Record<RiskBucket, string> = {
 };
 
 const BUCKET_BADGE: Record<RiskBucket, string> = {
-  low: 'bg-karmen-lime text-karmen-marine',
-  medium: 'bg-karmen-violet text-karmen-marine',
-  high: 'bg-destructive/10 text-destructive border border-destructive/30',
+  low: 'bg-emerald-50 text-emerald-700 border-emerald-300',
+  medium: 'bg-amber-50 text-amber-800 border-amber-300',
+  high: 'bg-destructive/10 text-destructive border-destructive/40',
 };
 
 type Props = {
@@ -25,9 +25,10 @@ export function ScoreCard({ score, explanation }: Props) {
     <CollapsibleSection
       title="Score de risque"
       icon={<Target aria-hidden className="h-4 w-4 text-karmen-blue" />}
+      sectionId="score"
       badge={
-        <span className={cn('ml-2 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold', BUCKET_BADGE[score.risk_bucket])}>
-          <span>{score.global_score}/100</span>
+        <span className={cn('ml-2 inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-semibold', BUCKET_BADGE[score.risk_bucket])}>
+          <span className="tabular-nums">{score.global_score}/100</span>
           <span className="hidden sm:inline opacity-80">· {BUCKET_LABEL[score.risk_bucket]}</span>
         </span>
       }

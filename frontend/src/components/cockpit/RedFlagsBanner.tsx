@@ -30,7 +30,7 @@ type Props = { redFlags: RedFlag[] };
 export function RedFlagsBanner({ redFlags }: Props) {
   if (redFlags.length === 0) {
     return (
-      <div className="rounded-xl border border-karmen-lime bg-karmen-lime/20 px-4 py-3 flex items-start gap-3">
+      <div role="status" className="rounded-xl border border-karmen-lime bg-karmen-lime/20 px-4 py-3 flex items-start gap-3">
         <CheckCircle2 aria-hidden className="h-5 w-5 text-karmen-marine shrink-0 mt-0.5" />
         <div>
           <p className="font-semibold text-karmen-marine">Aucune anomalie détectée</p>
@@ -59,7 +59,7 @@ export function RedFlagsBanner({ redFlags }: Props) {
               <p className="text-sm opacity-70 mt-0.5">{SEVERITY_LABEL[worst]}</p>
             </div>
           </div>
-          <ChevronDown aria-hidden className="h-4 w-4 shrink-0 transition-transform group-data-[state=open]:rotate-180" />
+          <ChevronDown aria-hidden className="h-4 w-4 shrink-0 transition-transform motion-reduce:transition-none group-data-[state=open]:rotate-180" />
         </CollapsibleTrigger>
         <CollapsibleContent className="px-4 pb-4">
           <ul className="space-y-2.5 text-sm pt-2 border-t border-current/10">
