@@ -70,7 +70,7 @@ L'écran est **instrumenté jour 1** : chaque interaction émet un event horodat
 
 - **DossiersListPage** — liste les 4 dossiers + badge complétude. Appelle `GET /dossiers`.
 - **CockpitPage** — appelle `GET /dossiers/:id/cockpit` et compose la vue.
-- **CockpitView** (composition de sections) — orchestre la progressive disclosure : sections **Anomalies + Complétude + Décision** expanded par défaut, sections **Score + Santé financière + Flux bancaires** collapsed. Chaque expand émet un event `cockpit.section.expanded`.
+- **CockpitView** (composition de sections) — orchestre la progressive disclosure : sections **Complétude + Anomalies + Décision** expanded par défaut, sections **Score + Santé financière + Flux bancaires** collapsed. La Complétude vient avant les Anomalies (gating documentaire d'abord). Chaque expand émet un event `cockpit.section.expanded`.
 - **RelanceModal** — email pré-rédigé éditable, bouton "Envoyer" qui émet `relance.sent` (pas d'envoi SMTP réel).
 - **DecisionPanel** — 3 boutons + champ justification. POST `/decisions` au submit.
 - **trackClient** (`lib/track.ts`) — `track(type, payload)` log console + POST `/events`. Wrapper unique, pas d'appel direct ailleurs.

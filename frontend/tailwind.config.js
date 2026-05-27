@@ -13,7 +13,7 @@ export default {
   	extend: {
   		fontFamily: {
   			sans: [
-  				'Inter',
+  				'Lexend',
   				'system-ui',
   				'sans-serif'
   			]
@@ -56,6 +56,20 @@ export default {
   				'4': 'hsl(var(--chart-4))',
   				'5': 'hsl(var(--chart-5))'
   			},
+  			karmen: {
+  				blue: '#1B5FFF',
+  				'blue-dark': '#1755E9',
+  				marine: '#0C1A3D',
+  				'marine-deep': '#001632',
+  				ink: '#21262C',
+  				lime: '#DDFC35',
+  				'lime-soft': '#E3FF4D',
+  				violet: '#E3B9FF',
+  				'pale-blue': '#F3F6FF',
+  				'pale-blue-2': '#EDF2FF',
+  				'border-blue': '#CAD6FF',
+  				mute: '#475569'
+  			},
   			sidebar: {
   				DEFAULT: 'hsl(var(--sidebar))',
   				foreground: 'hsl(var(--sidebar-foreground))',
@@ -69,8 +83,8 @@ export default {
   		},
   		borderRadius: {
   			lg: 'var(--radius)',
-  			md: 'calc(var(--radius) - 2px)',
-  			sm: 'calc(var(--radius) - 4px)'
+  			md: 'calc(var(--radius) - 4px)',
+  			sm: 'calc(var(--radius) - 8px)'
   		},
   		keyframes: {
   			'accordion-down': {

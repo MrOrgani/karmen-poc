@@ -7,6 +7,17 @@
 - **Auth / CORS allowlist** — explicitly out-of-POC-scope, but the production cockpit must enforce both before exposing financial data.
 - **Duplicate liasse-year detection** — current rule counts liasses without checking distinct years; a dossier with two copies of the 2024 liasse passes. Add a `distinct(year)` check.
 
+## Deferred from: code review frontend cockpit (2026-05-27)
+
+- **Runtime validation côté front** (`lib/api.ts`) — `response.json() as T` sans validation ; à durcir avec zod si le contrat backend bouge.
+- **Accessibility** — chevrons Lucide n'ont pas `aria-hidden` ; triggers Radix Collapsible héritent du data-state mais pas d'aria-label icône-only.
+- **`formatDelta` sign-flip** — si `previousYear < 0` (rare mais possible), la formule renverrait un signe inversé. Actuellement gardé par `previous <= 0 → '—'`.
+- **EBITDA = 0 vs EBITDA < 0** — `FinancialIndicators` affiche "EBITDA ≤ 0" dans les deux cas, conflate signaux.
+- **Snake/camel DTO leak** — `AugmentedDossier` côté front mélange `financing_request` / `risk_bucket` (snake) et `financialIndicators` / `bankFlows` (camel) car miroir backend brut. Un rename backend casserait silencieusement le front.
+- **Magic thresholds** — `CompletenessBadge` (50% / 100%) et `RISK_BADGE` mappés en JSX. Extraire en const nommée.
+- **`response.ok` mais body non-JSON** — si proxy mal routé renvoie une page HTML 200, `response.json()` throw SyntaxError surfacé comme "Erreur inconnue". À catcher et messager "Réponse non-JSON".
+- **URL id encoding** — `id` URL-encodé contenant `/` ou `%2F` peut produire 400 backend au lieu de 404 → UI affiche "Erreur de chargement" au lieu de "Dossier introuvable".
+
 ## Deferred from: code review (2026-05-27)
 
 - **I/O Matrix fr-001 Brasserie `redFlags=[]` inatteignable** — la fixture Brasserie déclenche `LOW_CASH_POSITION` (cash 18500 < outflows 22500). Trois options déjà documentées dans la review : (a) durcir le seuil à `< 0.5×` outflows, (b) re-négocier la ligne matrix, (c) ne rien faire. **Décision : defer post-démo Grégoire** — spec légèrement bavarde mais code fonctionnel sur les 4 dossiers.

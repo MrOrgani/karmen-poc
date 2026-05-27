@@ -264,12 +264,12 @@ function checkCompleteness(dossier): CompletenessResult {
 │ Brasserie du Marais · SARL · Restaurant · SIREN 823456789       │
 │ Prêt 35 000€ · 12 mois · 5.2%                                   │
 ├─────────────────────────────────────────────────────────────────┤
+│ 📁 COMPLÉTUDE — 100% ✅                          [Voir détail]  │  ← progressive disclosure
+├─────────────────────────────────────────────────────────────────┤
 │ 🚨 ANOMALIES DÉTECTÉES (3)                          [Détailler] │  ← collapsible
 │  • Dette/EBITDA = 11.2× (seuil critique > 5×)                   │
 │  • Marge EBITDA = 2.9% (faible)                                 │
 │  • Découverts : 75 jours sur 12 mois                            │
-├─────────────────────────────────────────────────────────────────┤
-│ 📁 COMPLÉTUDE — 100% ✅                          [Voir détail]  │  ← progressive disclosure
 ├─────────────────────────────────────────────────────────────────┤
 │ 🎯 SCORE — 82 / 100 · LOW RISK 🟢                               │
 │ Pourquoi :                                                      │
@@ -295,7 +295,7 @@ function checkCompleteness(dossier): CompletenessResult {
 
 ### Comportements de progressive disclosure
 
-- Au chargement : sections **collapsed** par défaut sauf **Anomalies** + **Complétude** + **Décision**.
+- Au chargement : sections **collapsed** par défaut sauf **Complétude** + **Anomalies** + **Décision**. La Complétude vient en tête : décider du gating documentaire prime sur l'analyse des risques (qui suppose des données complètes).
 - Clic sur "Voir détail" : expansion inline.
 - Si `completeness.isComplete = false` → bouton "Demander docs" mis en avant, modal s'ouvre avec email pré-rédigé.
 
