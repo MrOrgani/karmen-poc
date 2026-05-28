@@ -4,7 +4,7 @@ import type { TrackedEvent } from './events.types';
 
 type IngestBody = {
   type?: unknown;
-  dossierId?: unknown;
+  caseId?: unknown;
   durationMs?: unknown;
   payload?: unknown;
   ts?: unknown;
@@ -24,7 +24,7 @@ export class EventsController {
       throw new BadRequestException('Invalid event "type" (non-empty string required)');
     }
     const ts = typeof body.ts === 'number' && Number.isFinite(body.ts) && body.ts > 0 ? body.ts : Date.now();
-    const dossierId = typeof body.dossierId === 'string' ? body.dossierId : undefined;
+    const caseId = typeof body.caseId === 'string' ? body.caseId : undefined;
     const durationMs =
       typeof body.durationMs === 'number' && Number.isFinite(body.durationMs) ? body.durationMs : undefined;
     let payload: Record<string, unknown> | undefined;
@@ -32,7 +32,7 @@ export class EventsController {
       const entries = Object.entries(body.payload as Record<string, unknown>).slice(0, MAX_PAYLOAD_KEYS);
       payload = Object.fromEntries(entries);
     }
-    this.store.push({ ts, type: body.type, dossierId, durationMs, payload });
+    this.store.push({ ts, type: body.type, caseId, durationMs, payload });
     return { ok: true };
   }
 

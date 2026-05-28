@@ -4,12 +4,12 @@
  * only (tracking middleware) — declared here for cross-stack consistency.
  */
 export type EventType =
-  | 'dossier.list.viewed'
-  | 'dossier.opened'
+  | 'cases.list.viewed'
+  | 'case.opened'
   | 'cockpit.section.expanded'
-  | 'relance.modal.opened'
-  | 'relance.draft.generated'
-  | 'relance.sent'
+  | 'follow-up.modal.opened'
+  | 'follow-up.draft.generated'
+  | 'follow-up.sent'
   | 'decision.made'
   | 'http.request';
 
@@ -19,8 +19,8 @@ type Payload = Record<string, unknown>;
  * Fire-and-forget tracking. Logs to console + POST /api/events.
  * Never throws — instrumentation must never break the user flow.
  */
-export function track(type: EventType, dossierId?: string, payload?: Payload): void {
-  const event = { ts: Date.now(), type, dossierId, payload };
+export function track(type: EventType, caseId?: string, payload?: Payload): void {
+  const event = { ts: Date.now(), type, caseId, payload };
   if (import.meta.env.DEV) {
     console.log('📊 [track]', event);
   }

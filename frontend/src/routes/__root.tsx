@@ -1,5 +1,8 @@
 import { createRootRouteWithContext, Link, Outlet } from '@tanstack/react-router';
-import type { RouterContext } from '../router';
+import type { QueryClient } from '@tanstack/react-query';
+import { RouteErrorBoundary, RouteNotFound } from '@/shared/components/route-error-boundary';
+
+export type RouterContext = { queryClient: QueryClient };
 
 function RootLayout() {
   return (
@@ -13,8 +16,8 @@ function RootLayout() {
       <header className="bg-karmen-blue text-white">
         <div className="max-w-5xl mx-auto px-4 py-3.5 flex items-center justify-between">
           <Link to="/" className="inline-flex items-baseline gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60 rounded-sm">
-      <span className="text-white font-bold tracking-tight text-xl">KARMEN</span>
-    </Link>
+            <span className="text-white font-bold tracking-tight text-xl">KARMEN</span>
+          </Link>
         </div>
       </header>
       <main id="main-content" className="max-w-5xl mx-auto px-4 py-8">
@@ -24,4 +27,8 @@ function RootLayout() {
   );
 }
 
-export const rootRoute = createRootRouteWithContext<RouterContext>()({ component: RootLayout });
+export const Route = createRootRouteWithContext<RouterContext>()({
+  component: RootLayout,
+  errorComponent: RouteErrorBoundary,
+  notFoundComponent: RouteNotFound,
+});

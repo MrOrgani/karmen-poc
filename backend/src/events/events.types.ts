@@ -1,17 +1,17 @@
 export type EventType =
-  | 'dossier.list.viewed'
-  | 'dossier.opened'
+  | 'case.list.viewed'
+  | 'case.opened'
   | 'cockpit.section.expanded'
-  | 'relance.modal.opened'
-  | 'relance.draft.generated'
-  | 'relance.sent'
+  | 'follow-up.modal.opened'
+  | 'follow-up.draft.generated'
+  | 'follow-up.sent'
   | 'decision.made'
   | 'http.request';
 
 export type TrackedEvent = {
   ts: number;
   type: EventType | string;
-  dossierId?: string;
+  caseId?: string;
   durationMs?: number;
   payload?: Record<string, unknown>;
 };

@@ -1,6 +1,6 @@
 import { RedFlagDetector } from './red-flags.detector';
 import { RuleEngine } from '../rule-engine/rule-engine';
-import type { BankFlows, FactoringIndicators, FinancialIndicators } from '../dossiers/types';
+import type { BankFlows, FactoringIndicators, FinancialIndicators } from '../cases/types';
 
 const healthyFin: FinancialIndicators = {
   revenue: 300000,

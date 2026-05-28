@@ -1,20 +1,20 @@
 import { BadRequestException, Body, Controller, HttpCode, Logger, NotFoundException, Post } from '@nestjs/common';
-import { DossiersRepository } from '../dossiers/dossiers.repository';
-import type { AugmentedDossier } from '../dossiers/types';
+import { CasesRepository } from '../cases/cases.repository';
+import type { AugmentedCase } from '../cases/types';
 import { EventsStore } from '../events/events.store';
 
 type DecisionType = 'approve' | 'request_docs' | 'reject';
 const VALID_DECISIONS: readonly DecisionType[] = ['approve', 'request_docs', 'reject'];
 const MAX_JUSTIFICATION = 500;
 
-const DECISION_TO_STATUS: Record<DecisionType, AugmentedDossier['financing_request']['status']> = {
+const DECISION_TO_STATUS: Record<DecisionType, AugmentedCase['financing_request']['status']> = {
   approve: 'approved',
   request_docs: 'awaiting_documents',
   reject: 'rejected',
 };
 
 type DecisionBody = {
-  dossierId?: unknown;
+  caseId?: unknown;
   decision?: unknown;
   justification?: unknown;
 };
@@ -22,7 +22,7 @@ type DecisionBody = {
 type DecisionResponse = {
   ok: true;
   decision: DecisionType;
-  dossierId: string;
+  caseId: string;
   ts: number;
 };
 
@@ -36,14 +36,14 @@ export class DecisionsController {
 
   constructor(
     private readonly events: EventsStore,
-    private readonly dossiers: DossiersRepository,
+    private readonly cases: CasesRepository,
   ) {}
 
   @Post()
   @HttpCode(201)
   async record(@Body() body: DecisionBody): Promise<DecisionResponse> {
-    if (typeof body?.dossierId !== 'string' || body.dossierId.length === 0) {
-      throw new BadRequestException('Invalid "dossierId" (non-empty string required)');
+    if (typeof body?.caseId !== 'string' || body.caseId.length === 0) {
+      throw new BadRequestException('Invalid "caseId" (non-empty string required)');
     }
     if (!isDecisionType(body.decision)) {
       throw new BadRequestException(`Invalid "decision" (expected one of: ${VALID_DECISIONS.join(', ')})`);
@@ -52,20 +52,20 @@ export class DecisionsController {
       typeof body.justification === 'string' ? body.justification.slice(0, MAX_JUSTIFICATION) : '';
     const ts = Date.now();
     const nextStatus = DECISION_TO_STATUS[body.decision];
-    const updated = await this.dossiers.updateStatus(body.dossierId, nextStatus);
+    const updated = await this.cases.updateStatus(body.caseId, nextStatus);
     if (!updated) {
-      throw new NotFoundException(`Dossier "${body.dossierId}" not found`);
+      throw new NotFoundException(`Case "${body.caseId}" not found`);
     }
     const logSafeJustif = justification.replace(/[\r\n\x00-\x1f\x7f]/g, ' ').slice(0, 80);
     this.logger.log(
-      `📝 [DecisionsController.record] dossier=${body.dossierId} decision=${body.decision} status=${nextStatus} justifPreview="${logSafeJustif}"`,
+      `📝 [DecisionsController.record] case=${body.caseId} decision=${body.decision} status=${nextStatus} justifPreview="${logSafeJustif}"`,
     );
     this.events.push({
       ts,
       type: 'decision.made',
-      dossierId: body.dossierId,
+      caseId: body.caseId,
       payload: { decision: body.decision, justification, status: nextStatus },
     });
-    return { ok: true, decision: body.decision, dossierId: body.dossierId, ts };
+    return { ok: true, decision: body.decision, caseId: body.caseId, ts };
   }
 }

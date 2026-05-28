@@ -14,7 +14,7 @@ export class EventsStore {
       this.events.splice(0, this.events.length - MAX_EVENTS);
     }
     this.logger.log(
-      `📊 [EventsStore.push] type=${event.type} dossier=${event.dossierId ?? '-'} dur=${event.durationMs ?? '-'}ms`,
+      `📊 [EventsStore.push] type=${event.type} case=${event.caseId ?? '-'} dur=${event.durationMs ?? '-'}ms`,
     );
   }
 

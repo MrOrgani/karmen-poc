@@ -11,7 +11,7 @@ import type {
   RedFlagCategory,
   RuleDiagnosticItem,
   Severity,
-} from '../dossiers/types';
+} from '../cases/types';
 
 type RuleInput = {
   fin: FinancialIndicators;

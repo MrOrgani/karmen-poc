@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import type {
-  AugmentedDossier,
+  AugmentedCase,
   RedFlag,
   ScoreBullet,
   ScoreExplanation,
   Severity,
-} from '../dossiers/types';
+} from '../cases/types';
 import { SCORE_THEMES } from '../rule-engine/rule-engine';
 
 const MAX_BULLETS = 3;
@@ -40,8 +40,8 @@ function pickMostSevere(
 
 @Injectable()
 export class ScoreExplainer {
-  explain(dossier: AugmentedDossier, redFlags: RedFlag[]): ScoreExplanation {
-    const { financialIndicators: fin, bankFlows: bank } = dossier;
+  explain(case_: AugmentedCase, redFlags: RedFlag[]): ScoreExplanation {
+    const { financialIndicators: fin, bankFlows: bank } = case_;
 
     const profitabilityFlag = pickMostSevere(redFlags, PROFITABILITY_CODES);
     const debtFlag = pickMostSevere(redFlags, DEBT_CODES);
@@ -79,8 +79,8 @@ export class ScoreExplainer {
   }
 
   private cashProblemBullet(
-    fin: AugmentedDossier['financialIndicators'],
-    bank: AugmentedDossier['bankFlows'],
+    fin: AugmentedCase['financialIndicators'],
+    bank: AugmentedCase['bankFlows'],
     flag: RedFlag,
   ): string {
     if (flag.code === 'OVERDRAFT_DAYS_HIGH') {

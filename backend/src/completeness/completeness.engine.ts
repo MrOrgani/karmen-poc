@@ -1,18 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { documentRequirementsFor } from '../dossiers/document-requirements';
+import { documentRequirementsFor } from '../cases/document-requirements';
 import type {
-  AugmentedDossier,
+  AugmentedCase,
   CompletenessResult,
   MissingItem,
-} from '../dossiers/types';
+} from '../cases/types';
 
 @Injectable()
 export class CompletenessEngine {
-  check(dossier: AugmentedDossier): CompletenessResult {
-    const requirements = documentRequirementsFor(dossier.financing_request.type);
+  check(case_: AugmentedCase): CompletenessResult {
+    const requirements = documentRequirementsFor(case_.financing_request.type);
     const missing: MissingItem[] = [];
 
-    const liasses = dossier.documents.filter(
+    const liasses = case_.documents.filter(
       (d) => d.type === 'liasse_fiscale',
     );
     if (liasses.length < requirements.minLiasses) {
@@ -26,7 +26,7 @@ export class CompletenessEngine {
       });
     }
 
-    const releves = dossier.documents.filter(
+    const releves = case_.documents.filter(
       (d) => d.type === 'releve_bancaire',
     );
     const byAccount = new Map<string, typeof releves>();

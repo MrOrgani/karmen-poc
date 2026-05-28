@@ -1,12 +1,12 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { DecisionsModule } from './decisions/decisions.module';
-import { DossiersModule } from './dossiers/dossiers.module';
+import { CasesModule } from './cases/cases.module';
 import { EventsModule } from './events/events.module';
 import { TrackingMiddleware } from './events/tracking.middleware';
-import { RelancesModule } from './relances/relances.module';
+import { FollowUpsModule } from './follow-ups/follow-ups.module';
 
 @Module({
-  imports: [DossiersModule, EventsModule, RelancesModule, DecisionsModule],
+  imports: [CasesModule, EventsModule, FollowUpsModule, DecisionsModule],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {

@@ -1,5 +1,3 @@
-/* eslint-disable */
-// AUTO-GENERATED depuis backend/src/cases/types.ts — ne pas éditer.
 export type FinancingType = 'loan' | 'factoring';
 export type RiskBucket = 'low' | 'medium' | 'high';
 export type DocumentType = 'liasse_fiscale' | 'releve_bancaire';

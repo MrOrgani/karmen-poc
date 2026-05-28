@@ -4,7 +4,7 @@ import type {
   FinancialIndicators,
   FinancingType,
   RedFlag,
-} from '../dossiers/types';
+} from '../cases/types';
 import { RuleEngine } from '../rule-engine/rule-engine';
 
 @Injectable()

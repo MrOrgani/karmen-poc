@@ -1,21 +1,21 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
-import type { DossiersRepository } from '../dossiers/dossiers.repository';
-import type { AugmentedDossier } from '../dossiers/types';
+import type { CasesRepository } from '../cases/cases.repository';
+import type { AugmentedCase } from '../cases/types';
 import { EventsStore } from '../events/events.store';
 import { DecisionsController } from './decisions.controller';
 
-type Status = AugmentedDossier['financing_request']['status'];
+type Status = AugmentedCase['financing_request']['status'];
 
 function makeRepo(found: boolean): {
-  repo: DossiersRepository;
+  repo: CasesRepository;
   updateStatus: jest.Mock;
 } {
   const updateStatus = jest.fn(async (_id: string, status: Status) =>
-    found ? ({ financing_request: { status } } as AugmentedDossier) : null,
+    found ? ({ financing_request: { status } } as AugmentedCase) : null,
   );
   return {
-    repo: { updateStatus } as unknown as DossiersRepository,
+    repo: { updateStatus } as unknown as CasesRepository,
     updateStatus,
   };
 }
@@ -39,20 +39,20 @@ describe('DecisionsController.record', () => {
         const controller = new DecisionsController(events, repo);
 
         const res = await controller.record({
-          dossierId: 'fr-001',
+          caseId: 'fr-001',
           decision,
           justification: 'ok',
         });
 
         expect(updateStatus).toHaveBeenCalledWith('fr-001', expectedStatus);
-        expect(res).toMatchObject({ ok: true, decision, dossierId: 'fr-001' });
+        expect(res).toMatchObject({ ok: true, decision, caseId: 'fr-001' });
         expect(typeof res.ts).toBe('number');
 
         const pushed = events.all();
         expect(pushed).toHaveLength(1);
         expect(pushed[0]).toMatchObject({
           type: 'decision.made',
-          dossierId: 'fr-001',
+          caseId: 'fr-001',
           payload: { decision, status: expectedStatus, justification: 'ok' },
         });
       },
@@ -65,7 +65,7 @@ describe('DecisionsController.record', () => {
 
     await expect(
       controller.record({
-        dossierId: 'fr-unknown',
+        caseId: 'fr-unknown',
         decision: 'approve',
         justification: '',
       }),
@@ -81,7 +81,7 @@ describe('DecisionsController.record', () => {
 
     await expect(
       controller.record({
-        dossierId: 'fr-001',
+        caseId: 'fr-001',
         decision: 'pending',
         justification: '',
       }),
@@ -92,15 +92,15 @@ describe('DecisionsController.record', () => {
   });
 
   it.each<[string, unknown]>([
-    ['dossierId vide', ''],
-    ['dossierId non-string', 42],
-    ['dossierId undefined', undefined],
-  ])('%s → BadRequestException', async (_, dossierId) => {
+    ['caseId vide', ''],
+    ['caseId non-string', 42],
+    ['caseId undefined', undefined],
+  ])('%s → BadRequestException', async (_, caseId) => {
     const { repo, updateStatus } = makeRepo(true);
     const controller = new DecisionsController(events, repo);
 
     await expect(
-      controller.record({ dossierId, decision: 'approve', justification: '' }),
+      controller.record({ caseId, decision: 'approve', justification: '' }),
     ).rejects.toBeInstanceOf(BadRequestException);
 
     expect(updateStatus).not.toHaveBeenCalled();
@@ -112,7 +112,7 @@ describe('DecisionsController.record', () => {
     const longJustif = 'a'.repeat(800);
 
     await controller.record({
-      dossierId: 'fr-001',
+      caseId: 'fr-001',
       decision: 'approve',
       justification: longJustif,
     });
@@ -128,7 +128,7 @@ describe('DecisionsController.record', () => {
     const controller = new DecisionsController(events, repo);
 
     await controller.record({
-      dossierId: 'fr-001',
+      caseId: 'fr-001',
       decision: 'reject',
       justification: 42,
     });
