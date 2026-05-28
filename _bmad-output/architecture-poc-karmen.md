@@ -189,6 +189,12 @@ type AugmentedDossier = {
     overdraftDaysLast12m: number;
     rejectedPaymentsCount: number;
   };
+  // ─── Affacturage uniquement (factoring) ─────────────
+  factoringIndicators?: {       // présent ssi financing_request.type === 'factoring' (simulés)
+    topClientConcentrationPct: number;  // % CA réalisé avec le top 1 client
+    agedReceivablesPct: number;         // % créances clients > 60 j
+    dilutionRatePct: number;            // avoirs émis / CA, en %
+  };
 };
 ```
 

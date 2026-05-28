@@ -26,7 +26,12 @@ export class CockpitAggregator {
     const dossier = normalizeFinancialIndicators(raw, dataCoverage);
 
     const completeness = this.completeness.check(dossier);
-    const input = { fin: dossier.financialIndicators, bank: dossier.bankFlows };
+    const input = {
+      fin: dossier.financialIndicators,
+      bank: dossier.bankFlows,
+      financingType: dossier.financing_request.type,
+      factoring: dossier.factoringIndicators,
+    };
     const redFlags = this.rules.redFlags(input);
     const metricStatuses = this.rules.metricStatuses(input);
     const rulesDiagnostic = this.rules.diagnostic(input);

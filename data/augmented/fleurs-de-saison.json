@@ -41,12 +41,17 @@
     "netIncome": 4000,
     "totalDebt": 15000,
     "cashPosition": 3000,
-    "dso": 25
+    "dso": 68
   },
   "bankFlows": {
     "monthlyInflowsAverage": 8500,
     "monthlyOutflowsAverage": 8200,
     "overdraftDaysLast12m": 15,
     "rejectedPaymentsCount": 1
+  },
+  "factoringIndicators": {
+    "topClientConcentrationPct": 38,
+    "agedReceivablesPct": 24,
+    "dilutionRatePct": 4.2
   }
 }

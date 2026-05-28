@@ -1,7 +1,7 @@
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover';
 import type { MetricStatus, RedFlagCategory, RuleDiagnosticItem } from '@/shared/types';
 import { cn } from '@/shared/lib/utils';
-import { Info, Landmark, ListChecks, TrendingUp } from 'lucide-react';
+import { Briefcase, Info, Landmark, ListChecks, TrendingUp } from 'lucide-react';
 import { SectionCard } from './SectionCard';
 import { useHighlightedCodes } from '@/features/cockpit/hooks/useRuleHighlight';
 
@@ -33,13 +33,14 @@ const VALUE_CLASS: Record<MetricStatus, string> = {
 const CATEGORY_META: Record<RedFlagCategory, { title: string; icon: typeof TrendingUp }> = {
   financial: { title: 'Santé financière', icon: TrendingUp },
   bank: { title: 'Flux bancaires', icon: Landmark },
+  factoring: { title: 'Qualité créances (affacturage)', icon: Briefcase },
 };
 
-const CATEGORY_ORDER: RedFlagCategory[] = ['financial', 'bank'];
+const CATEGORY_ORDER: RedFlagCategory[] = ['financial', 'bank', 'factoring'];
 
 export function RulesDiagnostic({ items }: Props) {
   const highlightedCodes = useHighlightedCodes();
-  const grouped: Record<RedFlagCategory, RuleDiagnosticItem[]> = { financial: [], bank: [] };
+  const grouped: Record<RedFlagCategory, RuleDiagnosticItem[]> = { financial: [], bank: [], factoring: [] };
   for (const item of items) grouped[item.category].push(item);
 
   return (

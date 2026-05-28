@@ -3,7 +3,7 @@ export type RiskBucket = 'low' | 'medium' | 'high';
 export type DocumentType = 'liasse_fiscale' | 'releve_bancaire';
 export type Severity = 'low' | 'medium' | 'high';
 export type MetricStatus = 'ok' | 'warn' | 'alert' | 'unknown';
-export type RedFlagCategory = 'financial' | 'bank';
+export type RedFlagCategory = 'financial' | 'bank' | 'factoring';
 
 export type DossierDocument = {
   id: string;
@@ -35,6 +35,20 @@ export type BankFlows = {
   monthlyOutflowsAverage: number;
   overdraftDaysLast12m: number;
   rejectedPaymentsCount: number;
+};
+
+/**
+ * Indicateurs spécifiques affacturage — surfacés uniquement pour les dossiers
+ * `financing_request.type === 'factoring'`. Absents en prêt.
+ * Ratios exprimés en pourcentage du CA (0–100).
+ */
+export type FactoringIndicators = {
+  /** % du CA réalisé avec le top 1 client. Au-delà de 30 % = concentration critique. */
+  topClientConcentrationPct: number;
+  /** % des créances clients dont l'ancienneté dépasse 60 jours. Au-delà de 20 % = balance âgée dégradée. */
+  agedReceivablesPct: number;
+  /** Avoirs émis / CA. Au-delà de 5 % = contestations clients fréquentes. */
+  dilutionRatePct: number;
 };
 
 export type AugmentedDossier = {
@@ -71,6 +85,8 @@ export type AugmentedDossier = {
   };
   financialIndicators: FinancialIndicators;
   bankFlows: BankFlows;
+  /** Présent uniquement si financing_request.type === 'factoring'. */
+  factoringIndicators?: FactoringIndicators;
 };
 
 export type MissingItem = {
@@ -109,6 +125,10 @@ export type MetricStatuses = {
   monthlyOutflowsAverage: MetricStatus;
   overdraftDaysLast12m: MetricStatus;
   rejectedPaymentsCount: MetricStatus;
+  /** Factoring uniquement — 'ok' par défaut pour les dossiers prêt. */
+  topClientConcentrationPct: MetricStatus;
+  agedReceivablesPct: MetricStatus;
+  dilutionRatePct: MetricStatus;
 };
 
 /**

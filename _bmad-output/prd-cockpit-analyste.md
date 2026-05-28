@@ -22,7 +22,7 @@ Un **écran unique de cockpit** par dossier qui agrège, en un seul scroll :
 - une **action de relance** par email pré-rédigé en 1 clic si pièces manquantes,
 - une **prise de décision** intégrée (approuver / demander docs / refuser + justification courte).
 
-L'écran est **instrumenté jour 1** : chaque interaction émet un event horodaté, exportable en JSON, pour mesurer le temps réel passé par dossier et identifier les voleurs résiduels. L'écran s'adapte au type de financement (prêt vs affacturage) en surfaçant les indicateurs spécifiques quand c'est de l'affacturage (balance âgée, concentration top client, taux de dilution — hors POC mais structure prévue).
+L'écran est **instrumenté jour 1** : chaque interaction émet un event horodaté, exportable en JSON, pour mesurer le temps réel passé par dossier et identifier les voleurs résiduels. L'écran s'adapte au type de financement (prêt vs affacturage) en surfaçant les indicateurs spécifiques quand c'est de l'affacturage : **balance âgée, concentration top client, taux de dilution livrés** (3 règles `category: 'factoring'` activées conditionnellement sur `financing_request.type === 'factoring'`, cf. §Out of Scope pour les compléments roadmap).
 
 ## User Stories
 
@@ -166,7 +166,7 @@ Le champ `FinancialIndicators.revenuePreviousYear` est `number | null` côté ba
 - Persistance en base de données ; tout est in-memory.
 - Envoi SMTP réel des relances (la modale simule l'envoi).
 - Tests E2E exhaustifs, tests d'intégration HTTP, tests des composants React.
-- Indicateurs spécifiques affacturage avancés (balance âgée détaillée, concentration top client calculée, taux de dilution). La structure les anticipe via `financing_request.type === 'factoring'` mais le calcul n'est pas livré.
+- Indicateurs affacturage *complémentaires* hors POC (les 3 cœur — balance âgée, concentration top 1, dilution — sont livrés) : `CONCENTRATION_TOP_5`, `DEBTOR_PAYMENT_INCIDENTS`, `SECTOR_CONCENTRATION`, pondération variable `REVENUE_DECLINING` en factoring. Roadmap J3+.
 - Pré-validation des no-brainers en 1 clic (jalon J4 de la roadmap, hors POC).
 - Note IA pré-rédigée pour la décision finale (jalon J3, hors POC).
 - Accessibilité (WCAG) : effort de base via Tailwind mais pas d'audit.

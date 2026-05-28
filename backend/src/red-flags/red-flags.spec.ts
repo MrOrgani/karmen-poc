@@ -1,5 +1,6 @@
 import { RedFlagDetector } from './red-flags.detector';
-import type { BankFlows, FinancialIndicators } from '../dossiers/types';
+import { RuleEngine } from '../rule-engine/rule-engine';
+import type { BankFlows, FactoringIndicators, FinancialIndicators } from '../dossiers/types';
 
 const healthyFin: FinancialIndicators = {
   revenue: 300000,
@@ -79,14 +80,118 @@ describe('RedFlagDetector', () => {
     expect(flags.find((f) => f.code === 'LOW_CASH_POSITION')).toBeDefined();
   });
 
-  it('DSO_LONG se déclenche au-delà de 60j', () => {
+  it('DSO_LONG se déclenche au-delà de 60j (severity medium par défaut = loan)', () => {
     const flags = detector.detect({ ...healthyFin, dso: 75 }, healthyBank);
-    expect(flags.find((f) => f.code === 'DSO_LONG')).toBeDefined();
+    const flag = flags.find((f) => f.code === 'DSO_LONG');
+    expect(flag).toBeDefined();
+    expect(flag?.severity).toBe('medium');
+  });
+
+  it('DSO_LONG passe en severity high pour un dossier factoring', () => {
+    const flags = detector.detect({ ...healthyFin, dso: 75 }, healthyBank, 'factoring');
+    const flag = flags.find((f) => f.code === 'DSO_LONG');
+    expect(flag).toBeDefined();
+    expect(flag?.severity).toBe('high');
   });
 
   it('EBITDA_NEGATIVE_OR_ZERO se déclenche pour EBITDA ≤ 0 (et supprime les ratios dette/EBITDA)', () => {
     const flags = detector.detect({ ...healthyFin, ebitda: 0, totalDebt: 50000 }, healthyBank);
     expect(flags.find((f) => f.code === 'EBITDA_NEGATIVE_OR_ZERO')).toBeDefined();
     expect(flags.find((f) => f.code === 'DEBT_TO_EBITDA_HIGH')).toBeUndefined();
+  });
+});
+
+describe('RuleEngine — règles factoring', () => {
+  const engine = new RuleEngine();
+  const healthyFactoring: FactoringIndicators = {
+    topClientConcentrationPct: 15,
+    agedReceivablesPct: 8,
+    dilutionRatePct: 2,
+  };
+
+  it("aucune règle factoring n'est émise pour un dossier prêt, même si factoring fourni", () => {
+    const flags = engine.redFlags({
+      fin: healthyFin,
+      bank: healthyBank,
+      financingType: 'loan',
+      factoring: { topClientConcentrationPct: 90, agedReceivablesPct: 90, dilutionRatePct: 90 },
+    });
+    expect(flags.find((f) => f.code === 'CONCENTRATION_TOP_CLIENT')).toBeUndefined();
+    expect(flags.find((f) => f.code === 'AGED_RECEIVABLES_HIGH')).toBeUndefined();
+    expect(flags.find((f) => f.code === 'DILUTION_RATE_HIGH')).toBeUndefined();
+  });
+
+  it('aucune tuile factoring dans le diagnostic pour un dossier prêt', () => {
+    const diag = engine.diagnostic({
+      fin: healthyFin,
+      bank: healthyBank,
+      financingType: 'loan',
+    });
+    expect(diag.find((d) => d.category === 'factoring')).toBeUndefined();
+  });
+
+  it('3 tuiles factoring (ok) dans le diagnostic pour un dossier factoring sain', () => {
+    const diag = engine.diagnostic({
+      fin: healthyFin,
+      bank: healthyBank,
+      financingType: 'factoring',
+      factoring: healthyFactoring,
+    });
+    const tiles = diag.filter((d) => d.category === 'factoring');
+    expect(tiles).toHaveLength(3);
+    expect(tiles.every((t) => t.status === 'ok')).toBe(true);
+  });
+
+  it('CONCENTRATION_TOP_CLIENT high si top 1 > 30 %', () => {
+    const flags = engine.redFlags({
+      fin: healthyFin,
+      bank: healthyBank,
+      financingType: 'factoring',
+      factoring: { ...healthyFactoring, topClientConcentrationPct: 38 },
+    });
+    const f = flags.find((x) => x.code === 'CONCENTRATION_TOP_CLIENT');
+    expect(f).toBeDefined();
+    expect(f?.severity).toBe('high');
+  });
+
+  it('AGED_RECEIVABLES_HIGH high si > 20 % des créances > 60 j', () => {
+    const flags = engine.redFlags({
+      fin: healthyFin,
+      bank: healthyBank,
+      financingType: 'factoring',
+      factoring: { ...healthyFactoring, agedReceivablesPct: 25 },
+    });
+    const f = flags.find((x) => x.code === 'AGED_RECEIVABLES_HIGH');
+    expect(f).toBeDefined();
+    expect(f?.severity).toBe('high');
+  });
+
+  it('DILUTION_RATE_HIGH medium si avoirs/CA > 5 %', () => {
+    const flags = engine.redFlags({
+      fin: healthyFin,
+      bank: healthyBank,
+      financingType: 'factoring',
+      factoring: { ...healthyFactoring, dilutionRatePct: 6 },
+    });
+    const f = flags.find((x) => x.code === 'DILUTION_RATE_HIGH');
+    expect(f).toBeDefined();
+    expect(f?.severity).toBe('medium');
+  });
+
+  it('dossier factoring sans factoringIndicators → tuiles unknown, aucun red flag factoring', () => {
+    const diag = engine.diagnostic({
+      fin: healthyFin,
+      bank: healthyBank,
+      financingType: 'factoring',
+    });
+    const tiles = diag.filter((d) => d.category === 'factoring');
+    expect(tiles).toHaveLength(3);
+    expect(tiles.every((t) => t.status === 'unknown')).toBe(true);
+    const flags = engine.redFlags({
+      fin: healthyFin,
+      bank: healthyBank,
+      financingType: 'factoring',
+    });
+    expect(flags.find((f) => f.code === 'CONCENTRATION_TOP_CLIENT')).toBeUndefined();
   });
 });

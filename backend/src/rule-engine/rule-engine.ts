@@ -1,8 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import type {
   BankFlows,
+  FactoringIndicators,
   FinancialIndicators,
   FinancialThresholds,
+  FinancingType,
   MetricStatus,
   MetricStatuses,
   RedFlag,
@@ -11,7 +13,12 @@ import type {
   Severity,
 } from '../dossiers/types';
 
-type RuleInput = { fin: FinancialIndicators; bank: BankFlows };
+type RuleInput = {
+  fin: FinancialIndicators;
+  bank: BankFlows;
+  financingType: FinancingType;
+  factoring?: FactoringIndicators;
+};
 
 type RuleEvaluation = {
   status: MetricStatus;
@@ -37,7 +44,10 @@ export type RuleCode =
   | 'dso'
   | 'overdraft_days'
   | 'rejected_payments'
-  | 'flows_balance';
+  | 'flows_balance'
+  | 'top_client_concentration'
+  | 'aged_receivables'
+  | 'dilution_rate';
 
 type RuleDefinition = {
   code: RuleCode;
@@ -273,16 +283,20 @@ const RULES: RuleDefinition[] = [
         fin.dso < 45 ? 'ok' : fin.dso < 60 ? 'warn' : 'alert';
       return { status, value: `${fin.dso} j` };
     },
-    toRedFlags: (e, { fin }) =>
+    toRedFlags: (e, { fin, financingType }) =>
       e.status === 'alert'
         ? [
             {
               redFlagCode: 'DSO_LONG',
-              severity: 'medium',
+              // En factoring, un DSO long pèse directement sur la rentabilité Karmen
+              // (les créances financées vont être lentes à payer) → severity high.
+              severity: financingType === 'factoring' ? 'high' : 'medium',
               value: `${fin.dso} jours (seuil > 60j)`,
               threshold: 'DSO > 60 jours',
               rationale:
-                'Un délai moyen de paiement client supérieur à 60 jours immobilise du cash chez les clients. Critique pour les modèles B2B et particulièrement scruté en analyse affacturage.',
+                financingType === 'factoring'
+                  ? "En affacturage, un DSO supérieur à 60 jours pèse directement sur la rentabilité de l'opération : les créances cédées seront lentes à recouvrer et augmentent la durée d'immobilisation des fonds Karmen."
+                  : 'Un délai moyen de paiement client supérieur à 60 jours immobilise du cash chez les clients. Critique pour les modèles B2B et particulièrement scruté en analyse affacturage.',
             },
           ]
         : [],
@@ -358,6 +372,108 @@ const RULES: RuleDefinition[] = [
       return { status, value: `${(ratio * 100).toFixed(0)}% des sorties` };
     },
     toRedFlags: () => [], // pas de red flag dédié dans la version historique
+  },
+  {
+    code: 'top_client_concentration',
+    category: 'factoring',
+    label: 'Concentration top 1 client',
+    metricKey: 'topClientConcentrationPct',
+    threshold: 'Sain < 20 % · vigilance 20-30 % · critique > 30 %',
+    rationale:
+      "En affacturage, la dépendance à un client unique concentre le risque : si ce client défaille, la majorité des créances financées s'effondre.",
+    evaluate: ({ factoring, financingType }) => {
+      if (financingType !== 'factoring' || !factoring) {
+        return {
+          status: 'unknown',
+          value: '—',
+          unavailableReason: 'Indicateur affacturage — non applicable au prêt',
+        };
+      }
+      const pct = factoring.topClientConcentrationPct;
+      const status: MetricStatus = pct < 20 ? 'ok' : pct <= 30 ? 'warn' : 'alert';
+      return { status, value: fmtPct(pct, 0) };
+    },
+    toRedFlags: (e, { factoring }) => {
+      if (e.status !== 'alert' || !factoring) return [];
+      return [
+        {
+          redFlagCode: 'CONCENTRATION_TOP_CLIENT',
+          severity: 'high',
+          value: `${fmtPct(factoring.topClientConcentrationPct, 0)} du CA (seuil > 30 %)`,
+          threshold: 'Top 1 client > 30 % du CA',
+          rationale:
+            "Plus de 30 % du CA concentré sur un seul client expose Karmen à un risque de défaut majeur sur les créances financées : si ce débiteur défaille, l'essentiel du portefeuille cédé s'effondre.",
+        },
+      ];
+    },
+  },
+  {
+    code: 'aged_receivables',
+    category: 'factoring',
+    label: 'Créances > 60 jours',
+    metricKey: 'agedReceivablesPct',
+    threshold: 'Sain < 10 % · vigilance 10-20 % · critique > 20 %',
+    rationale:
+      "Part des créances clients dont l'ancienneté dépasse 60 jours. Indicateur direct de la qualité de la balance âgée et de la vitesse de recouvrement attendue.",
+    evaluate: ({ factoring, financingType }) => {
+      if (financingType !== 'factoring' || !factoring) {
+        return {
+          status: 'unknown',
+          value: '—',
+          unavailableReason: 'Indicateur affacturage — non applicable au prêt',
+        };
+      }
+      const pct = factoring.agedReceivablesPct;
+      const status: MetricStatus = pct < 10 ? 'ok' : pct <= 20 ? 'warn' : 'alert';
+      return { status, value: fmtPct(pct, 0) };
+    },
+    toRedFlags: (e, { factoring }) => {
+      if (e.status !== 'alert' || !factoring) return [];
+      return [
+        {
+          redFlagCode: 'AGED_RECEIVABLES_HIGH',
+          severity: 'high',
+          value: `${fmtPct(factoring.agedReceivablesPct, 0)} des créances > 60 j (seuil > 20 %)`,
+          threshold: 'Balance âgée > 60 j > 20 %',
+          rationale:
+            "Plus de 20 % des créances clients sont en retard de paiement de plus de 60 jours. Risque élevé de créances lentes ou douteuses → la rentabilité de l'opération d'affacturage est compromise.",
+        },
+      ];
+    },
+  },
+  {
+    code: 'dilution_rate',
+    category: 'factoring',
+    label: 'Taux de dilution',
+    metricKey: 'dilutionRatePct',
+    threshold: 'Sain < 3 % · vigilance 3-5 % · critique > 5 %',
+    rationale:
+      'Avoirs émis / CA. Un taux élevé révèle des contestations fréquentes (litiges, retours, ristournes) qui érodent la valeur réelle des créances cédées.',
+    evaluate: ({ factoring, financingType }) => {
+      if (financingType !== 'factoring' || !factoring) {
+        return {
+          status: 'unknown',
+          value: '—',
+          unavailableReason: 'Indicateur affacturage — non applicable au prêt',
+        };
+      }
+      const pct = factoring.dilutionRatePct;
+      const status: MetricStatus = pct < 3 ? 'ok' : pct <= 5 ? 'warn' : 'alert';
+      return { status, value: fmtPct(pct, 1) };
+    },
+    toRedFlags: (e, { factoring }) => {
+      if (e.status !== 'alert' || !factoring) return [];
+      return [
+        {
+          redFlagCode: 'DILUTION_RATE_HIGH',
+          severity: 'medium',
+          value: `${fmtPct(factoring.dilutionRatePct, 1)} (seuil > 5 %)`,
+          threshold: 'Avoirs émis / CA > 5 %',
+          rationale:
+            "Un taux de dilution supérieur à 5 % indique des contestations clients fréquentes qui réduisent la valeur recouvrable des créances cédées : risque opérationnel direct sur le rendement de l'opération.",
+        },
+      ];
+    },
   },
 ];
 
@@ -435,6 +551,9 @@ export class RuleEngine {
       monthlyOutflowsAverage: 'ok',
       overdraftDaysLast12m: 'ok',
       rejectedPaymentsCount: 'ok',
+      topClientConcentrationPct: 'ok',
+      agedReceivablesPct: 'ok',
+      dilutionRatePct: 'ok',
     };
     const seen = new Set<keyof MetricStatuses>();
     for (const rule of RULES) {
@@ -452,7 +571,11 @@ export class RuleEngine {
 
   diagnostic(input: RuleInput): RuleDiagnosticItem[] {
     const evaluations = this.evaluateAll(input);
-    return RULES.map((rule) => {
+    // En prêt, on n'expose pas les tuiles factoring (sinon ce serait 3 tuiles "non applicable" sur tous les dossiers prêt).
+    const applicable = RULES.filter(
+      (rule) => rule.category !== 'factoring' || input.financingType === 'factoring',
+    );
+    return applicable.map((rule) => {
       const e = evaluations.get(rule.code)!;
       return {
         code: rule.code,

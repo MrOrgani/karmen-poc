@@ -4,7 +4,12 @@
 
 ## 1. Méthode — le socle avant toute ligne de code
 
-Triangulation systématique : **(a) voix analystes** (3 interviews + observation directe chronométrée 2 dossiers, junior+senior), **(b) data parcours** via outil d'instrumentation Karmen existant (audit baseline en kickoff + complément des trous via events POC dès la 1ère ligne, format compatible avec l'outil existant), **(c) hypothèses business** validées en kickoff Grégoire (cf. §2). Garde-fous : jugement humain reste roi, IA assistée jamais décisionnelle, instrumentation jour 1.
+Triangulation systématique : 
+
+**(a) voix analystes** (3 interviews + observation directe chronométrée 2 dossiers, junior+senior), 
+**(b) data parcours** via outil d'instrumentation Karmen existant (audit baseline en kickoff + complément des trous via events POC dès la 1ère ligne, format compatible avec l'outil existant), 
+**(c) hypothèses business** validées en kickoff Grégoire (cf. §2). 
+Garde-fous : jugement humain reste roi, IA assistée jamais décisionnelle, instrumentation jour 1.
 
 ## 2. Diagnostic (validé Grégoire)
 
@@ -15,23 +20,25 @@ Triangulation systématique : **(a) voix analystes** (3 interviews + observation
 4. **Consulter le scoring** — déjà rapide.
 
 **Distribution bimodale confirmée :** no-brainers ~30 min, complexes jusqu'à 4h.
+
 **Différenciation prêt/affacturage :** faible — mêmes étapes + quelques indicateurs financiers spécifiques affacturage (balance âgée, concentration top client, taux de dilution).
 
-## 3. Avant de coder — questions analystes ciblées temps (5-10 analystes, mix junior/senior)
+## 3. Avant de coder — questions analystes ciblées temps (3-5 analystes, mix junior/senior)
 
-**Q1.** *"Sur ton dernier dossier 2h, quelles étapes ont été les plus consommatrices ? Où as-tu perdu du temps inutilement ?"*
-**Q2.** *"Qu'est-ce qui fait qu'un dossier prend 30 min plutôt que 4h ? Quel type te plombe, lequel passe sans douleur ?"*
-**Q3.** *"Combien de fois tu rouvres un onglet ou un module déjà consulté ? Dernier cas concret ?"*
+**Q1.** *"Sur ton dernier dossier 2h, quelles étapes ont été les plus consommatrices ? Où as-tu perdu du temps inutilement ?"*  
+**Q2.** *"Qu'est-ce qui fait qu'un dossier prend 30 min plutôt que 4h ? Quel type te plombe, lequel passe sans douleur ?"*  
+**Q3.** *"Combien de fois tu rouvres un onglet ou un module déjà consulté ? Dernier cas concret ?"* 
+
 **+ Observation directe chronométrée :** 2 analystes (junior+senior), think-aloud, 60 min/session.
 
 ## 4. Roadmap 2h → 30 min (4 jalons, 8 semaines)
 
-| Jalon | Période | Livrable | Voleur attaqué | Gain estimé | Métrique de validation |
-|---|---|---|---|---|---|
-| **J1** | S1-S2 | Completeness Engine + Smart Relance IA | Étape 1 (#1) | **-25 min** | % complets au 1er dépôt, nb relances/dossier |
-| **J2** | S3-S4 | Cockpit unifié adaptatif prêt/factoring (progressive disclosure) | Étape 3 (#2) | **-45 min** | Nb modules ouverts/dossier, temps cockpit→décision |
-| **J3** | S5-S6 | Note IA pré-rédigée + interface décision rénovée | Étape 4 (#3 + frustration) | **-15 min + adhésion** | Temps rédaction médian, NPS analyste rédaction |
-| **J4** | S7-S8 | Pré-validation no-brainers (encadrée, 1 clic, audit trail) | Bimodalité confirmée | **-25 min sur 50% portef = -12 min moy.** | % pré-validés, taux confirmation, taux rouverture |
+| Jalon | Période | Livrable | Voleur attaqué | Gain estimé | Métrique de validation | Questions complémentaires
+|---|---|---|---|---|---|---|
+| **J1** | S1-S2 | Completeness Engine + Smart Relance IA | Étape 1 (#1) | **-25 min** | % complets au 1er dépôt, nb relances/dossier + Net Promoter Score (NPS) | Quel est actuellement le pourcentage de dossiers qui arrivent incomplet ? Est-ce que les analystes doivent regarder l'ensemble des documents uploadés individuellement pour vérifier la complétude du dossier ? Que se passe-t-il quand un dossier est incomplet ? Est-ce qu'un analyste peut faire des recommandations autres que la demande d'autres documents ?  
+| **J2** | S3-S4 | Cockpit unifié adaptatif prêt/affacturage | Étape 3 (#2) | **-45 min** | Nb modules ouverts/dossier, temps cockpit→décision | Que regarde un analyste ? À quelles métriques s'intéresse un analyste ? 
+| **J3** | S5-S6 | Note IA pré-rédigée + interface décision rénovée | Étape 4 (#3 + frustration) | **-15 min + adhésion** | Temps rédaction médian, Net Promoter Score (NPS) analyste rédaction | Y a-t-il un format type de réponse actuellement? 
+| **J4** | S7-S8 | Pré-validation no-brainers (encadrée, 1 clic, audit trail) | Bimodalité confirmée | **-25 min sur 50% portef = -12 min moy.** | % pré-validés, taux confirmation, taux rouverture | 
 
 **Cumul cible : 120 min → ~30 min**, mesuré via l'outil d'instrumentation Karmen existant (audit kickoff + events POC compatibles).
 
