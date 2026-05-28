@@ -118,7 +118,7 @@ Les 3 specs sous `_bmad-output/implementation-artifacts/` sont **figées** (`<fr
 
 Pas de chronologie commit par commit ; les phases reflètent l'enchaînement *logique* du raisonnement produit.
 
-1. **Cadrage** (avant toute ligne de code) — triangulation voix analystes + data parcours + kickoff Greg. Sortie : cadrage 1 page, PRD, architecture. Décision : J1+J2 only.
+1. **Cadrage** (avant toute ligne de code) — triangulation voix analystes + data parcours + kickoff Greg. Sortie : README §2 (méthode + roadmap 4 jalons), PRD, architecture. Décision : J1+J2 only.
 2. **Backend engines purs** — `CompletenessEngine` + tests, `RedFlagDetector` + `ScoreExplainer`, `CockpitAggregator`. Endpoint roi `GET /api/dossiers/:id/cockpit`.
 3. **Frontend cockpit MVP** — TanStack Router 2 routes, shadcn/ui systématique, progressive disclosure stricte. Refacto → TanStack Query.
 4. **Bloc 3 (relances + décisions + instrumentation)** — `RelanceModal` + `DecisionPanel` + `lib/track.ts` + middleware backend. ≥5 events distincts exportables.

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import type { AugmentedCase, MissingItem } from '../cases/types';
+import { CompletenessEngine } from '../completeness/completeness.engine';
+import type { AugmentedCase } from '../cases/types';
 
 export type FollowUpDraft = {
   subject: string;
@@ -9,11 +10,16 @@ export type FollowUpDraft = {
 
 @Injectable()
 export class FollowUpsService {
+  constructor(private readonly completeness: CompletenessEngine) {}
+
   /**
-   * Mock LLM. Genère un brouillon d'email à partir du case + missing items.
+   * Mock LLM. Génère un brouillon d'email à partir du case.
+   * La liste des pièces manquantes est dérivée en interne via CompletenessEngine
+   * pour que l'invariant "un follow-up reflète l'état documentaire actuel" reste local.
    * Branchement LLM réel (Claude/OpenAI) à activer en prod via env var.
    */
-  draft(case_: AugmentedCase, missing: MissingItem[]): FollowUpDraft {
+  draftForCase(case_: AugmentedCase): FollowUpDraft {
+    const missing = this.completeness.check(case_).missing;
     const { company, financing_request: req } = case_;
     const missingDocs = missing.map((m) => m.reason);
 

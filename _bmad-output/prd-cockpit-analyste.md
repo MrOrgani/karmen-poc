@@ -3,7 +3,7 @@
 **Statut :** ready-for-agent
 **Auteur :** Max · 2026-05-27
 **Timebox :** 2-3h de code
-**Sources :** [cadrage 1 page](cadrage-karmen-1-page.md), [architecture POC](architecture-poc-karmen.md), [brainstorming](brainstorming/brainstorming-session-2026-05-26-1058.md), [fiche finance](learning/fiche-finance-entreprise-analyse-credit-pme.md).
+**Sources :** méthode de cadrage intégrée au [README §2](../README.md#2-méthode-de-cadrage), [architecture POC](architecture-poc-karmen.md), [brainstorming](brainstorming/brainstorming-session-2026-05-26-1058.md), [fiche finance](learning/fiche-finance-entreprise-analyse-credit-pme.md).
 
 ---
 

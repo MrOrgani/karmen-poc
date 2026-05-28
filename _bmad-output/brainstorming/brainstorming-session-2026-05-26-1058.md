@@ -287,7 +287,7 @@ Ajout `financialIndicators` (issu liasse fiscale) + `bankFlows` (issu Open Banki
 
 ## Livrables produits suite à cette session
 
-1. `_bmad-output/cadrage-karmen-1-page.md` — Doc cadrage 1 page.
+1. `README.md` §2 (Méthode de cadrage) — intégré au README principal (anciennement `_bmad-output/cadrage-karmen-1-page.md`).
 2. `_bmad-output/architecture-poc-karmen.md` — Architecture technique POC.
 3. `data/raw/*.json` — Fichiers fournis originaux.
 4. `data/augmented/*.json` — Fichiers enrichis pour le POC.

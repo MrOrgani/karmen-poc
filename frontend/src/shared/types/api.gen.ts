@@ -6,6 +6,11 @@ export type DocumentType = 'liasse_fiscale' | 'releve_bancaire';
 export type Severity = 'low' | 'medium' | 'high';
 export type MetricStatus = 'ok' | 'warn' | 'alert' | 'unknown';
 export type RedFlagCategory = 'financial' | 'bank' | 'factoring';
+/**
+ * Vue analytique transverse sur les règles (orthogonale à `RedFlagCategory`).
+ * Sert à regrouper les flags pour la synthèse en 3 bullets du DecisionPanel.
+ */
+export type Theme = 'profitability' | 'debt' | 'cash';
 
 export type CaseDocument = {
   id: string;
@@ -113,6 +118,10 @@ export type RedFlag = {
   /** One-sentence rationale of why this rule matters for credit analysis. */
   rationale: string;
   category: RedFlagCategory;
+  /** Theme of the rule that emitted this flag — drives the 3-bullet synthesis. */
+  theme?: Theme;
+  /** Sentence à afficher si ce flag est le plus sévère de son thème. */
+  explanation: string;
 };
 
 /** Per-KPI evaluation against reference thresholds — drives color coding in the UI. */

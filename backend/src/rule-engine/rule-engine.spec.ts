@@ -1,6 +1,5 @@
-import { RedFlagDetector } from './red-flags.detector';
-import { RuleEngine } from '../rule-engine/rule-engine';
-import type { BankFlows, FactoringIndicators, FinancialIndicators } from '../cases/types';
+import { RuleEngine } from './rule-engine';
+import type { BankFlows, FactoringIndicators, FinancialIndicators, FinancingType } from '../cases/types';
 
 const healthyFin: FinancialIndicators = {
   revenue: 300000,
@@ -18,17 +17,18 @@ const healthyBank: BankFlows = {
   rejectedPaymentsCount: 0,
 };
 
-describe('RedFlagDetector', () => {
-  const detector = new RedFlagDetector();
+describe('RuleEngine.redFlags — règles prêt', () => {
+  const engine = new RuleEngine();
+  const flags = (fin: FinancialIndicators, bank: BankFlows, financingType: FinancingType = 'loan') =>
+    engine.redFlags({ fin, bank, financingType });
 
   it('dossier sain → aucun red flag', () => {
-    expect(detector.detect(healthyFin, healthyBank)).toEqual([]);
+    expect(flags(healthyFin, healthyBank)).toEqual([]);
   });
 
   it('DEBT_TO_EBITDA_HIGH se déclenche pour dette > 5× EBITDA', () => {
     const fin = { ...healthyFin, ebitda: 10000, totalDebt: 60000 };
-    const flags = detector.detect(fin, healthyBank);
-    const flag = flags.find((f) => f.code === 'DEBT_TO_EBITDA_HIGH');
+    const flag = flags(fin, healthyBank).find((f) => f.code === 'DEBT_TO_EBITDA_HIGH');
     expect(flag).toBeDefined();
     expect(flag?.severity).toBe('high');
     expect(flag?.value).toContain('6.0×');
@@ -36,68 +36,64 @@ describe('RedFlagDetector', () => {
 
   it('DEBT_TO_EBITDA_MEDIUM se déclenche dans la zone 3×–5×', () => {
     const fin = { ...healthyFin, ebitda: 10000, totalDebt: 40000 };
-    const flags = detector.detect(fin, healthyBank);
-    const flag = flags.find((f) => f.code === 'DEBT_TO_EBITDA_MEDIUM');
+    const out = flags(fin, healthyBank);
+    const flag = out.find((f) => f.code === 'DEBT_TO_EBITDA_MEDIUM');
     expect(flag).toBeDefined();
     expect(flag?.severity).toBe('medium');
-    expect(flags.find((f) => f.code === 'DEBT_TO_EBITDA_HIGH')).toBeUndefined();
+    expect(out.find((f) => f.code === 'DEBT_TO_EBITDA_HIGH')).toBeUndefined();
   });
 
   it('EBITDA_MARGIN_LOW se déclenche pour marge < 5%', () => {
     const fin = { ...healthyFin, revenue: 1000000, ebitda: 30000 };
-    const flags = detector.detect(fin, healthyBank);
-    expect(flags.find((f) => f.code === 'EBITDA_MARGIN_LOW')).toBeDefined();
+    expect(flags(fin, healthyBank).find((f) => f.code === 'EBITDA_MARGIN_LOW')).toBeDefined();
   });
 
   it('NEGATIVE_NET_INCOME se déclenche pour résultat net négatif', () => {
     const fin = { ...healthyFin, netIncome: -1000 };
-    const flags = detector.detect(fin, healthyBank);
-    expect(flags.find((f) => f.code === 'NEGATIVE_NET_INCOME')).toBeDefined();
+    expect(flags(fin, healthyBank).find((f) => f.code === 'NEGATIVE_NET_INCOME')).toBeDefined();
   });
 
   it('REVENUE_DECLINING se déclenche pour CA < 90% N-1', () => {
     const fin = { ...healthyFin, revenue: 200000, revenuePreviousYear: 300000 };
-    const flags = detector.detect(fin, healthyBank);
-    expect(flags.find((f) => f.code === 'REVENUE_DECLINING')).toBeDefined();
+    expect(flags(fin, healthyBank).find((f) => f.code === 'REVENUE_DECLINING')).toBeDefined();
   });
 
   it('OVERDRAFT_DAYS_HIGH se déclenche au-delà de 30 jours', () => {
-    const flags = detector.detect(healthyFin, { ...healthyBank, overdraftDaysLast12m: 45 });
-    const flag = flags.find((f) => f.code === 'OVERDRAFT_DAYS_HIGH');
+    const flag = flags(healthyFin, { ...healthyBank, overdraftDaysLast12m: 45 }).find(
+      (f) => f.code === 'OVERDRAFT_DAYS_HIGH',
+    );
     expect(flag).toBeDefined();
     expect(flag?.severity).toBe('high');
   });
 
   it('REJECTED_PAYMENTS se déclenche pour ≥1 rejet', () => {
-    const flags = detector.detect(healthyFin, { ...healthyBank, rejectedPaymentsCount: 2 });
-    expect(flags.find((f) => f.code === 'REJECTED_PAYMENTS')).toBeDefined();
+    expect(
+      flags(healthyFin, { ...healthyBank, rejectedPaymentsCount: 2 }).find((f) => f.code === 'REJECTED_PAYMENTS'),
+    ).toBeDefined();
   });
 
   it('LOW_CASH_POSITION se déclenche quand cash < sorties moy', () => {
     const fin = { ...healthyFin, cashPosition: 1000 };
     const bank = { ...healthyBank, monthlyOutflowsAverage: 20000 };
-    const flags = detector.detect(fin, bank);
-    expect(flags.find((f) => f.code === 'LOW_CASH_POSITION')).toBeDefined();
+    expect(flags(fin, bank).find((f) => f.code === 'LOW_CASH_POSITION')).toBeDefined();
   });
 
   it('DSO_LONG se déclenche au-delà de 60j (severity medium par défaut = loan)', () => {
-    const flags = detector.detect({ ...healthyFin, dso: 75 }, healthyBank);
-    const flag = flags.find((f) => f.code === 'DSO_LONG');
+    const flag = flags({ ...healthyFin, dso: 75 }, healthyBank).find((f) => f.code === 'DSO_LONG');
     expect(flag).toBeDefined();
     expect(flag?.severity).toBe('medium');
   });
 
   it('DSO_LONG passe en severity high pour un dossier factoring', () => {
-    const flags = detector.detect({ ...healthyFin, dso: 75 }, healthyBank, 'factoring');
-    const flag = flags.find((f) => f.code === 'DSO_LONG');
+    const flag = flags({ ...healthyFin, dso: 75 }, healthyBank, 'factoring').find((f) => f.code === 'DSO_LONG');
     expect(flag).toBeDefined();
     expect(flag?.severity).toBe('high');
   });
 
   it('EBITDA_NEGATIVE_OR_ZERO se déclenche pour EBITDA ≤ 0 (et supprime les ratios dette/EBITDA)', () => {
-    const flags = detector.detect({ ...healthyFin, ebitda: 0, totalDebt: 50000 }, healthyBank);
-    expect(flags.find((f) => f.code === 'EBITDA_NEGATIVE_OR_ZERO')).toBeDefined();
-    expect(flags.find((f) => f.code === 'DEBT_TO_EBITDA_HIGH')).toBeUndefined();
+    const out = flags({ ...healthyFin, ebitda: 0, totalDebt: 50000 }, healthyBank);
+    expect(out.find((f) => f.code === 'EBITDA_NEGATIVE_OR_ZERO')).toBeDefined();
+    expect(out.find((f) => f.code === 'DEBT_TO_EBITDA_HIGH')).toBeUndefined();
   });
 });
 

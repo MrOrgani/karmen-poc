@@ -19,14 +19,28 @@ Ordre chronophagie validé Grégoire : complétude > financier > note > scoring.
 
 ## 2. Méthode de cadrage
 
-Avant toutes proposition de solution, une étude terrain devrait être menée. Elle s'articule autour de différentes sources d'informations :
+**Triangulation** (le socle avant toute ligne de code) :
+- **(a)** voix analystes (3-5 interviews + observation chronométrée 2 dossiers junior+senior — *prévue, non-collectée à date : c'est l'ouverture du cycle mesure*),
+- **(b)** data parcours via l'outil d'instrumentation Karmen existant (audit baseline en kickoff + events POC compatibles dès la 1ère ligne),
+- **(c)** hypothèses business validées en kickoff Grégoire : différenciation prêt/factoring **faible** (+ quelques indicateurs spécifiques affacturage), distribution **bimodale confirmée** (no-brainers ~30 min vs complexes ~4h), ordre chronophagie validé.
 
-**(a)** voix analystes (3-5 interviews + observation chronométrée 2 dossiers, *non-collectée à date — c'est l'ouverture du cycle mesure*)  
-**(b)** data parcours via les events instrumentés livrés jour 1,   
-**(c)** kickoff Grégoire (différenciation prêt/factoring faible, instrumentation existante chez Karmen, distribution bimodale confirmée). 
-Sortie : [cadrage 1 page](_bmad-output/cadrage-karmen-1-page.md) — roadmap 4 jalons. 
+**Garde-fous posture** : jugement humain reste roi, IA assistée jamais décisionnelle, instrumentation jour 1.
 
-**Décision structurante** : coder J1+J2 (complétude + cockpit unifié), écarter explicitement J3 (note IA) et J4 (pré-validation no-brainers). Faire moins, mais mesurable.
+**Avant de coder — questions analystes ciblées** (3-5 analystes, mix junior/senior, observation think-aloud 60 min) :
+- **Q1.** *"Sur ton dernier dossier 2h, quelles étapes ont été les plus consommatrices ? Où as-tu perdu du temps inutilement ?"*
+- **Q2.** *"Qu'est-ce qui fait qu'un dossier prend 30 min plutôt que 4h ? Quel type te plombe, lequel passe sans douleur ?"*
+- **Q3.** *"Combien de fois tu rouvres un onglet ou un module déjà consulté ? Dernier cas concret ?"*
+
+**Roadmap 2h → 30 min — 4 jalons / 8 semaines :**
+
+| Jalon | Période | Livrable | Voleur | Gain | Métrique de validation |
+|---|---|---|---|---|---|
+| **J1** | S1-S2 | Completeness Engine + Smart Relance IA | Étape 1 (#1) | **-25 min** | % complets au 1er dépôt, nb relances/dossier, NPS |
+| **J2** | S3-S4 | Cockpit unifié adaptatif prêt/affacturage | Étape 3 (#2) | **-45 min** | Nb modules ouverts/dossier, temps cockpit→décision |
+| **J3** | S5-S6 | Note IA pré-rédigée + interface décision rénovée | Étape 4 (#3 + frustration) | **-15 min + adhésion** | Temps rédaction médian, NPS analyste rédaction |
+| **J4** | S7-S8 | Pré-validation no-brainers (encadrée, 1 clic, audit trail) | Bimodalité | **-25 min sur 50 % portef = -12 min moy.** | % pré-validés, taux confirmation, rouverture |
+
+**Décision structurante POC** : coder **J1 + J2** = les 2 plus gros voleurs (étapes 1+3), embarquant l'instrumentation events jour 1 dans un format compatible avec l'outil Karmen existant. **J3 (note IA) et J4 (pré-validation no-brainers) explicitement écartés** — faire moins, mais mesurable. La démo Fleurs de Saison matérialise l'adaptabilité prêt/factoring promise par J2.
 
 ## 3. Le POC livré (J1 + J2)
 
@@ -89,4 +103,4 @@ Tests : `npm run -w backend test` (12 specs `red-flags` + completeness + decisio
 
 - **[Annexe 1 — Règles](README-annexe-1-regles.md)** : 10 règles raisonnées, différenciation prêt/factoring (livrée + à ajouter).
 - **[Annexe 2 — Mesure, coût IA J3, trade-offs](README-annexe-2-mesure-cout-trade-offs.md)** : gain détaillé par étape, coût IA chiffré, 5 trade-offs, évolutions vs spec, timeline 5 phases, axes d'amélioration complets, out of scope.
-- [Cadrage 1 page](_bmad-output/cadrage-karmen-1-page.md) · [PRD](_bmad-output/prd-cockpit-analyste.md) · [Architecture POC](_bmad-output/architecture-poc-karmen.md) · [Specs d'implémentation](_bmad-output/implementation-artifacts/) (figées) · [Fiche finance](_bmad-output/learning/fiche-finance-entreprise-analyse-credit-pme.md)
+- [PRD](_bmad-output/prd-cockpit-analyste.md) · [Architecture POC](_bmad-output/architecture-poc-karmen.md) · [Specs d'implémentation](_bmad-output/implementation-artifacts/) (figées) · [Fiche finance](_bmad-output/learning/fiche-finance-entreprise-analyse-credit-pme.md)

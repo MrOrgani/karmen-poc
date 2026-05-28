@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { CompletenessEngine } from '../completeness/completeness.engine';
-import { RedFlagDetector } from '../red-flags/red-flags.detector';
 import { RuleEngine } from '../rule-engine/rule-engine';
 import { ScoreExplainer } from '../score/score.explainer';
 import { CockpitAggregator } from './cockpit.aggregator';
@@ -14,14 +13,12 @@ import { CasesRepository } from './cases.repository';
     CockpitAggregator,
     CompletenessEngine,
     RuleEngine,
-    RedFlagDetector,
     ScoreExplainer,
   ],
   exports: [
     CasesRepository,
     CompletenessEngine,
     RuleEngine,
-    RedFlagDetector,
     ScoreExplainer,
   ],
 })

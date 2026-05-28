@@ -452,7 +452,7 @@ React/TS · Vite · Tailwind · NestJS · TypeScript · in-memory data
 
 ## Données
 - data/raw/ : fichiers fournis intacts
-- data/augmented/ : schéma enrichi (financialIndicators + bankFlows) — détail dans cadrage 1 page
+- data/augmented/ : schéma enrichi (financialIndicators + bankFlows + factoringIndicators) — détail §3
 
 ## Métriques POC
 - Détection complétude 100% sur les 2 dossiers incomplets (test unitaire)

@@ -11,9 +11,10 @@ import type {
   RedFlagCategory,
   RuleDiagnosticItem,
   Severity,
+  Theme,
 } from '../cases/types';
 
-type RuleInput = {
+export type RuleInput = {
   fin: FinancialIndicators;
   bank: BankFlows;
   financingType: FinancingType;
@@ -32,6 +33,8 @@ type RuleEmission = {
   value: string;
   threshold: string;
   rationale: string;
+  /** Sentence affichée dans le bullet thème si ce flag est le plus sévère. */
+  explanation: string;
 };
 
 export type RuleCode =
@@ -52,6 +55,8 @@ export type RuleCode =
 type RuleDefinition = {
   code: RuleCode;
   category: RedFlagCategory;
+  /** Vue analytique — détermine sous quel bullet ce flag sera agrégé. */
+  theme?: Theme;
   label: string;
   metricKey: keyof MetricStatuses;
   threshold: string;
@@ -67,6 +72,7 @@ const RULES: RuleDefinition[] = [
   {
     code: 'ebitda_positive',
     category: 'financial',
+    theme: 'debt',
     label: 'EBITDA positif',
     metricKey: 'ebitda',
     threshold: 'EBITDA > 0',
@@ -86,6 +92,7 @@ const RULES: RuleDefinition[] = [
               threshold: 'EBITDA ≤ 0',
               rationale:
                 "Un EBITDA nul ou négatif signifie que l'activité opérationnelle ne dégage aucun cash. Aucune capacité de remboursement intrinsèque — la dette devra être servie par d'autres sources (cession d'actifs, recapitalisation).",
+              explanation: `Capacité de remboursement nulle : EBITDA ${fin.ebitda.toLocaleString('fr-FR')} €`,
             },
           ]
         : [],
@@ -93,6 +100,7 @@ const RULES: RuleDefinition[] = [
   {
     code: 'debt_to_ebitda',
     category: 'financial',
+    theme: 'debt',
     label: 'Dette / EBITDA',
     metricKey: 'totalDebt',
     threshold: 'Sain < 3× · vigilance 3-5× · critique > 5×',
@@ -119,6 +127,7 @@ const RULES: RuleDefinition[] = [
             threshold: 'Dette > 5× EBITDA',
             rationale:
               "Au-delà de 5× l'EBITDA, il faudrait plus de 5 ans de profitabilité opérationnelle pour rembourser la dette. Karmen considère ce niveau comme un signal d'alerte de surendettement structurel.",
+            explanation: `Endettement préoccupant : ${ratio.toFixed(1)}× l'EBITDA`,
           },
         ];
       }
@@ -131,6 +140,7 @@ const RULES: RuleDefinition[] = [
             threshold: '3× ≤ Dette / EBITDA ≤ 5×',
             rationale:
               "Entre 3× et 5×, l'endettement reste absorbable mais consomme une part significative de l'EBITDA pour le service de la dette. À surveiller selon la trajectoire de profitabilité.",
+            explanation: `Endettement préoccupant : ${ratio.toFixed(1)}× l'EBITDA`,
           },
         ];
       }
@@ -140,6 +150,7 @@ const RULES: RuleDefinition[] = [
   {
     code: 'ebitda_margin',
     category: 'financial',
+    theme: 'profitability',
     label: 'Marge EBITDA',
     metricKey: 'ebitda',
     threshold: 'Sain > 10% · vigilance 5-10% · alerte < 5%',
@@ -165,6 +176,7 @@ const RULES: RuleDefinition[] = [
           threshold: 'Marge EBITDA < 5%',
           rationale:
             'Une marge EBITDA inférieure à 5% indique un modèle économique peu rentable ou sous pression. La tolérance aux chocs (matières, salaires, fiscalité) est très limitée.',
+          explanation: `Rentabilité dégradée : marge EBITDA ${margin.toFixed(1)}%${fin.netIncome < 0 ? ', résultat net négatif' : ''}`,
         },
       ];
     },
@@ -172,6 +184,7 @@ const RULES: RuleDefinition[] = [
   {
     code: 'net_income',
     category: 'financial',
+    theme: 'profitability',
     label: 'Résultat net',
     metricKey: 'netIncome',
     threshold: 'Sain ≥ 0',
@@ -181,23 +194,26 @@ const RULES: RuleDefinition[] = [
       status: fin.netIncome >= 0 ? 'ok' : 'alert',
       value: fmtEUR(fin.netIncome),
     }),
-    toRedFlags: (e, { fin }) =>
-      e.status === 'alert'
-        ? [
-            {
-              redFlagCode: 'NEGATIVE_NET_INCOME',
-              severity: 'medium',
-              value: fmtEUR(fin.netIncome),
-              threshold: 'Résultat net < 0',
-              rationale:
-                "Une perte nette traduit que l'ensemble des charges (opérationnelles + financières + impôts) dépasse les revenus. À analyser : nature de la perte (exceptionnelle ou récurrente) et trajectoire pluriannuelle.",
-            },
-          ]
-        : [],
+    toRedFlags: (e, { fin }) => {
+      if (e.status !== 'alert') return [];
+      const margin = fin.revenue > 0 ? (fin.ebitda / fin.revenue) * 100 : 0;
+      return [
+        {
+          redFlagCode: 'NEGATIVE_NET_INCOME',
+          severity: 'medium',
+          value: fmtEUR(fin.netIncome),
+          threshold: 'Résultat net < 0',
+          rationale:
+            "Une perte nette traduit que l'ensemble des charges (opérationnelles + financières + impôts) dépasse les revenus. À analyser : nature de la perte (exceptionnelle ou récurrente) et trajectoire pluriannuelle.",
+          explanation: `Rentabilité dégradée : marge EBITDA ${margin.toFixed(1)}%, résultat net négatif`,
+        },
+      ];
+    },
   },
   {
     code: 'revenue_evolution',
     category: 'financial',
+    theme: 'profitability',
     label: 'Évolution du CA',
     metricKey: 'revenue',
     threshold: 'Sain ≥ N-1 · alerte < 90% × N-1',
@@ -225,6 +241,7 @@ const RULES: RuleDefinition[] = [
       const delta =
         ((fin.revenue - fin.revenuePreviousYear) / fin.revenuePreviousYear) *
         100;
+      const margin = fin.revenue > 0 ? (fin.ebitda / fin.revenue) * 100 : 0;
       return [
         {
           redFlagCode: 'REVENUE_DECLINING',
@@ -233,6 +250,7 @@ const RULES: RuleDefinition[] = [
           threshold: 'CA N < 90% × CA N-1',
           rationale:
             "Une contraction du chiffre d'affaires de plus de 10% sur un exercice peut signaler une perte de parts de marché, un effet conjoncturel, ou un changement de business model. Croisement nécessaire avec les marges.",
+          explanation: `Activité en repli : CA ${delta.toFixed(1)}% vs N-1 (marge EBITDA ${margin.toFixed(1)}%)`,
         },
       ];
     },
@@ -240,6 +258,7 @@ const RULES: RuleDefinition[] = [
   {
     code: 'cash_position',
     category: 'financial',
+    theme: 'cash',
     label: 'Trésorerie',
     metricKey: 'cashPosition',
     threshold: 'Sain ≥ 1 mois · alerte < 0,5 mois',
@@ -266,6 +285,7 @@ const RULES: RuleDefinition[] = [
           threshold: 'Trésorerie < 1 mois de sorties',
           rationale:
             "Une trésorerie inférieure aux sorties mensuelles moyennes laisse moins d'un mois de runway en cas d'arrêt brutal des encaissements. Risque opérationnel élevé en cas d'imprévu.",
+          explanation: `Trésorerie tendue : ${fin.cashPosition.toLocaleString('fr-FR')} € < sorties mensuelles moyennes`,
         },
       ];
     },
@@ -273,6 +293,7 @@ const RULES: RuleDefinition[] = [
   {
     code: 'dso',
     category: 'financial',
+    theme: 'cash',
     label: 'DSO',
     metricKey: 'dso',
     threshold: 'Sain ≤ 45 j · vigilance 45-60 j · alerte > 60 j',
@@ -297,6 +318,7 @@ const RULES: RuleDefinition[] = [
                 financingType === 'factoring'
                   ? "En affacturage, un DSO supérieur à 60 jours pèse directement sur la rentabilité de l'opération : les créances cédées seront lentes à recouvrer et augmentent la durée d'immobilisation des fonds Karmen."
                   : 'Un délai moyen de paiement client supérieur à 60 jours immobilise du cash chez les clients. Critique pour les modèles B2B et particulièrement scruté en analyse affacturage.',
+              explanation: `DSO long : ${fin.dso} jours (cash bloqué chez les clients)`,
             },
           ]
         : [],
@@ -304,6 +326,7 @@ const RULES: RuleDefinition[] = [
   {
     code: 'overdraft_days',
     category: 'bank',
+    theme: 'cash',
     label: 'Jours de découvert',
     metricKey: 'overdraftDaysLast12m',
     threshold: 'Sain 0 j · vigilance 1-30 j · alerte > 30 j',
@@ -324,6 +347,7 @@ const RULES: RuleDefinition[] = [
               threshold: '> 30 jours de découvert / 12 mois',
               rationale:
                 "Plus de 30 jours cumulés en découvert sur 12 mois révèle une tension de trésorerie structurelle plutôt que ponctuelle. Indicateur fort d'un BFR sous-financé ou d'une saisonnalité mal gérée.",
+              explanation: `Tensions bancaires : ${bank.overdraftDaysLast12m} j de découvert sur 12 mois`,
             },
           ]
         : [],
@@ -331,6 +355,7 @@ const RULES: RuleDefinition[] = [
   {
     code: 'rejected_payments',
     category: 'bank',
+    theme: 'cash',
     label: 'Rejets de paiement',
     metricKey: 'rejectedPaymentsCount',
     threshold: 'Sain 0 · alerte ≥ 1',
@@ -350,6 +375,7 @@ const RULES: RuleDefinition[] = [
               threshold: '≥ 1 rejet / 12 mois',
               rationale:
                 'Un rejet de prélèvement ou de chèque signale soit une insuffisance de provision, soit un litige fournisseur. Premier signal faible avant un défaut.',
+              explanation: `Tensions bancaires : ${bank.rejectedPaymentsCount} rejet(s) sur 12 mois`,
             },
           ]
         : [],
@@ -357,6 +383,7 @@ const RULES: RuleDefinition[] = [
   {
     code: 'flows_balance',
     category: 'bank',
+    theme: 'cash',
     label: 'Entrées vs sorties',
     metricKey: 'monthlyInflowsAverage',
     threshold: 'Sain ≥ 100% · alerte < 90%',
@@ -403,6 +430,7 @@ const RULES: RuleDefinition[] = [
           threshold: 'Top 1 client > 30 % du CA',
           rationale:
             "Plus de 30 % du CA concentré sur un seul client expose Karmen à un risque de défaut majeur sur les créances financées : si ce débiteur défaille, l'essentiel du portefeuille cédé s'effondre.",
+          explanation: `Concentration critique : ${fmtPct(factoring.topClientConcentrationPct, 0)} du CA sur un seul client`,
         },
       ];
     },
@@ -437,6 +465,7 @@ const RULES: RuleDefinition[] = [
           threshold: 'Balance âgée > 60 j > 20 %',
           rationale:
             "Plus de 20 % des créances clients sont en retard de paiement de plus de 60 jours. Risque élevé de créances lentes ou douteuses → la rentabilité de l'opération d'affacturage est compromise.",
+          explanation: `Balance âgée dégradée : ${fmtPct(factoring.agedReceivablesPct, 0)} des créances > 60 j`,
         },
       ];
     },
@@ -471,27 +500,34 @@ const RULES: RuleDefinition[] = [
           threshold: 'Avoirs émis / CA > 5 %',
           rationale:
             "Un taux de dilution supérieur à 5 % indique des contestations clients fréquentes qui réduisent la valeur recouvrable des créances cédées : risque opérationnel direct sur le rendement de l'opération.",
+          explanation: `Taux de dilution élevé : ${fmtPct(factoring.dilutionRatePct, 1)} d'avoirs émis`,
         },
       ];
     },
   },
 ];
 
-export const SCORE_THEMES = {
-  profitability: [
-    'ebitda_margin',
-    'net_income',
-    'revenue_evolution',
-  ] as RuleCode[],
-  debt: ['debt_to_ebitda', 'ebitda_positive'] as RuleCode[],
-  cash: [
-    'cash_position',
-    'overdraft_days',
-    'rejected_payments',
-    'dso',
-    'flows_balance',
-  ] as RuleCode[],
-} as const;
+/**
+ * Phrase positive par thème — utilisée quand aucun flag de ce thème n'est levé.
+ * Couplée au tag `theme` porté par chaque rule.
+ */
+export const THEMES: Record<Theme, { whenAllGreen: (input: RuleInput) => string }> = {
+  profitability: {
+    whenAllGreen: ({ fin }) => {
+      const margin = fin.revenue > 0 ? (fin.ebitda / fin.revenue) * 100 : 0;
+      return `Rentabilité opérationnelle correcte (marge EBITDA ${margin.toFixed(1)}%)`;
+    },
+  },
+  debt: {
+    whenAllGreen: ({ fin }) => {
+      const ratio = fin.ebitda > 0 ? fin.totalDebt / fin.ebitda : Infinity;
+      return `Endettement absorbable (${ratio.toFixed(2)}× d'EBITDA)`;
+    },
+  },
+  cash: {
+    whenAllGreen: () => `Trésorerie saine et flux bancaires sans anomalie`,
+  },
+};
 
 const STATUS_RANK: Record<MetricStatus, number> = {
   ok: 0,
@@ -528,10 +564,12 @@ export class RuleEngine {
           code: emission.redFlagCode,
           severity: emission.severity,
           category: rule.category,
+          theme: rule.theme,
           label: rule.label,
           value: emission.value,
           threshold: emission.threshold,
           rationale: emission.rationale,
+          explanation: emission.explanation,
         });
       }
     }
@@ -604,6 +642,10 @@ export class RuleEngine {
       out[rule.metricKey] = { rule: rule.threshold, rationale: rule.rationale };
     }
     return out;
+  }
+
+  rulesForTheme(theme: Theme): RuleCode[] {
+    return RULES.filter((r) => r.theme === theme).map((r) => r.code);
   }
 
   private findRule(code: RuleCode): RuleDefinition {
