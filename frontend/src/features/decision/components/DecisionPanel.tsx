@@ -18,6 +18,7 @@ import { type DecisionType } from '@/features/decision/api';
 import { useRecordDecision } from '@/features/decision/hooks/useRecordDecision';
 import { useDossierId } from '@/features/cockpit/hooks/useDossierId';
 import { useHighlight } from '@/features/cockpit/hooks/useRuleHighlight';
+import { RelanceModal } from '@/features/relance/components/RelanceModal';
 import type { AugmentedDossier, RiskBucket, ScoreExplanation } from '@/shared/types';
 import { cn } from '@/shared/lib/utils';
 
@@ -49,11 +50,17 @@ export function DecisionPanel({ score, explanation }: Props) {
   const highlight = useHighlight();
   const [justification, setJustification] = useState('');
   const [pendingDecision, setPendingDecision] = useState<DecisionType | null>(null);
+  const [relanceOpen, setRelanceOpen] = useState(false);
   const mutation = useRecordDecision(dossierId);
 
   const handle = (decision: DecisionType) => {
     setPendingDecision(decision);
-    mutation.mutate({ decision, justification });
+    mutation.mutate(
+      { decision, justification },
+      decision === 'request_docs'
+        ? { onSuccess: () => setRelanceOpen(true) }
+        : undefined,
+    );
   };
 
   const submitting = mutation.isPending;
@@ -207,6 +214,9 @@ export function DecisionPanel({ score, explanation }: Props) {
           </Alert>
         )}
       </CardContent>
+      {relanceOpen && (
+        <RelanceModal dossierId={dossierId} open={relanceOpen} onOpenChange={setRelanceOpen} />
+      )}
     </Card>
   );
 }

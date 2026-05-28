@@ -10,9 +10,10 @@ export function useRecordDecision(dossierId: string) {
   >({
     mutationFn: ({ decision, justification }) =>
       recordDecision(dossierId, decision, justification),
-    // Invalide la lecture cockpit pour refléter la décision sans refetch manuel.
+    // Le statut du dossier est muté côté serveur, donc cockpit ET liste doivent refetch.
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['cockpit', dossierId] });
+      void queryClient.invalidateQueries({ queryKey: ['dossiers'] });
     },
   });
 }

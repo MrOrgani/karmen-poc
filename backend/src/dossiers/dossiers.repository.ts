@@ -31,6 +31,16 @@ export class DossiersRepository implements OnModuleInit {
     return this.dossiers.find((d) => d.financing_request.id === id) ?? null;
   }
 
+  async updateStatus(
+    id: string,
+    status: AugmentedDossier['financing_request']['status'],
+  ): Promise<AugmentedDossier | null> {
+    const dossier = this.dossiers.find((d) => d.financing_request.id === id);
+    if (!dossier) return null;
+    dossier.financing_request.status = status;
+    return dossier;
+  }
+
   private resolveDataDir(): string {
     let dir = process.cwd();
     for (let i = 0; i < 5; i++) {
