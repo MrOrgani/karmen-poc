@@ -29,13 +29,17 @@ L'écran est **instrumenté jour 1** : chaque interaction émet un event horodat
 1. En tant qu'analyste crédit, je veux voir la liste des dossiers en attente avec un badge de complétude visible, afin d'attaquer en priorité ceux qui sont déjà complets.
 2. En tant qu'analyste, je veux cliquer sur un dossier et arriver directement sur son écran cockpit, afin de ne pas naviguer entre plusieurs modules.
 3. En tant qu'analyste, je veux voir en haut du cockpit l'identité de l'entreprise (raison sociale, SIREN, type juridique, secteur) et les paramètres de la demande (montant, durée, taux, type prêt/affacturage), afin d'avoir le contexte immédiat.
-4. En tant qu'analyste, je veux voir un bandeau d'anomalies en haut de l'écran avec le nombre de red flags détectés et leur libellé court, afin de juger en 5 secondes si le dossier est risqué.
-5. En tant qu'analyste, je veux que le bandeau anomalies soit collapsible avec un bouton « Détailler », afin de plonger dans le détail seulement quand c'est utile.
+4. En tant qu'analyste, je veux voir en haut du cockpit un **diagnostic structuré des 10 indicateurs clés** (CA, EBITDA, marge, dette/EBITDA, résultat net, trésorerie, DSO, découverts, rejets, balance E/S) groupés par catégorie (financiers / bancaires) avec un statut visuel par tuile (`ok` / `warn` / `alert` / `unknown`), afin de juger en 5 secondes la santé du dossier sans lire de prose.
+5. En tant qu'analyste, je veux survoler chaque tuile pour voir un **popover de méthodologie** (seuil, formule, source de la donnée), afin de comprendre *pourquoi* une tuile est en alerte sans rouvrir la doc règles.
+
+> **Évolution post-bloc 2 → "diagnostic 10 indicateurs".** La spec d'origine (US #4-5) prévoyait un simple bandeau `Alert` collapsible listant les red flags textuels. À l'usage on a constaté que la liste textuelle (« Dette/EBITDA = 11.2× ») demande à l'analyste de reconstruire mentalement la cartographie des indicateurs, ce qui annule une partie du gain de temps. Le diagnostic 10 indicateurs surface l'intégralité du référentiel d'analyse (y compris les indicateurs *sains* et ceux *non-calculables*), avec popover méthodo intégré → moins de "trous noirs" cognitifs, plus didactique pour les juniors. Trade-off : surface UI plus large (10 tuiles vs 1 bandeau), assumé.
 6. En tant qu'analyste, je veux voir un indicateur de complétude documentaire avec un pourcentage et un état visuel (vert si 100%), afin de savoir si je peux décider tout de suite ou si je dois relancer.
 7. En tant qu'analyste, je veux voir la liste des pièces manquantes avec une raison explicite (« seulement 10 mois sur 12 pour LCL », « 1/2 liasses fournies »), afin de comprendre exactement ce qu'il manque.
 8. En tant qu'analyste, je veux un bouton « Demander docs » qui ouvre une modale d'email pré-rédigé, afin de relancer le client sans rédiger l'email moi-même.
 9. En tant qu'analyste, je veux pouvoir éditer le contenu de l'email avant envoi, afin de personnaliser le ton si nécessaire.
-10. En tant qu'analyste, je veux voir le score de risque existant (low/medium/high) accompagné de 3 phrases d'explication, afin de comprendre pourquoi le scoring a tranché ainsi.
+10. En tant qu'analyste, je veux voir le score de risque (low/medium/high) **co-localisé avec le panneau de décision**, accompagné de 3 bullets d'explication cliquables qui me **scrollent vers la ou les tuiles d'indicateurs sous-jacentes** (cross-highlight), afin de comprendre l'origine du score sans switch d'attention.
+
+> **Évolution post-bloc 2 → score fusionné dans `DecisionPanel`.** La spec d'origine prévoyait un `ScoreCard` séparé (collapsed) et un `DecisionPanel` distinct (expanded). À l'usage, l'analyste consulte le score *au moment de cliquer un des 3 boutons* — séparer les deux force un aller-retour visuel. La fusion réduit la cognitive load au moment décisif et permet le **cross-highlight bullet → tuile** (chaque bullet expose `ruleCodes[]` côté backend). Trade-off : le score n'est plus visible "en survol" sans dérouler la section décision, assumé puisque la décision est toujours expanded.
 11. En tant qu'analyste, je veux voir les indicateurs financiers clés (CA N et N-1 avec variation, EBITDA et marge, résultat net, dette, dette/EBITDA, trésorerie, DSO), afin d'évaluer la santé financière sans rouvrir un autre écran.
 12. En tant qu'analyste, je veux voir les flux bancaires agrégés sur 12 mois (entrées/sorties moyennes, jours de découvert, nombre de rejets), afin d'évaluer le comportement bancaire réel.
 13. En tant qu'analyste, je veux que les sections « santé financière » et « flux bancaires » soient collapsibles, afin d'aller vite quand le dossier est un no-brainer.
@@ -56,25 +60,35 @@ L'écran est **instrumenté jour 1** : chaque interaction émet un event horodat
 
 ## Implementation Decisions
 
+> **Évolutions post-livraison (synthèse).** Cette section décrit l'architecture telle que livrée. Trois évolutions notables par rapport au design initial ont été actées en cours de réalisation :
+> 1. **`RuleEngine` comme source unique de vérité métier** (cf. §Modules backend). Le `RedFlagDetector` simple a été promu en moteur déclaratif unique qui produit à la fois les red flags textuels, les statuts par indicateur (`metricStatuses`), les seuils (`financialThresholds`) et le diagnostic groupé (`rulesDiagnostic`). Justification : une seule table de règles → cohérence garantie entre bandeau anomalies, tuiles, popovers, et bullets du score.
+> 2. **Gating data → KPI (Hybrid Option 2).** Quand une donnée requise par une règle est absente (ex. liasse N-1 manquante → `revenuePreviousYear = null`), la règle correspondante n'est pas évaluée silencieusement : elle remonte avec le statut `unknown` + raison (`"Liasse N-1 manquante"`). On préfère un diagnostic *honnête mais incomplet* à un diagnostic *complet mais extrapolé*. Le contrat `FinancialIndicators` accepte donc des champs nullables (`revenuePreviousYear: number | null`), et le frontend affiche les tuiles `unknown` en gris explicite.
+> 3. **Diagnostic 10 indicateurs + score-dans-décision.** Voir US #4-5 et #10 ci-dessus. Conséquence sur le contrat API : `CockpitResponse` est enrichi (cf. §Schéma `CockpitResponseDto`).
+
 ### Modules backend (NestJS)
 
 - **CompletenessEngine** (module profond, pur, sans état) — interface unique : `check(dossier: AugmentedDossier) → { score: number, isComplete: boolean, missing: MissingItem[] }`. Encapsule les règles `liasseFiscaleMinCount` et `minMonthsPerBankAccount` par type de financement. Table de règles déclarative pour faciliter l'ajout de nouveaux types de pièces. Le score est calculé comme `completedItems / totalItems × 100`.
-- **RedFlagDetector** (module profond, pur, sans état) — interface unique : `detect(financialIndicators, bankFlows) → RedFlag[]`. Table de règles déclarative (code, condition, severity, label, formatter de la valeur). Codes prévus : `DEBT_TO_EBITDA_HIGH/MEDIUM`, `EBITDA_MARGIN_LOW`, `NEGATIVE_NET_INCOME`, `REVENUE_DECLINING`, `OVERDRAFT_DAYS_HIGH`, `REJECTED_PAYMENTS`, `LOW_CASH_POSITION`, `DSO_LONG`.
-- **ScoreExplainer** (module profond, pur) — interface unique : `explain(dossier, redFlags) → string[]`. Produit 3 bullets max, priorise les angles rentabilité / endettement / flux bancaires en fonction des valeurs et des red flags détectés.
-- **CockpitAggregator** (orchestrateur fin) — `getCockpit(dossierId) → CockpitResponseDto`. Lit le dossier via le repository (lecture JSON), appelle les 3 modules purs, compose la réponse. Pas de logique métier propre.
+- **RuleEngine** (module profond, pur, sans état) — **source unique de vérité métier**. Interface : `evaluateAll(indicators, bankFlows, dataCoverage) → { redFlags, metricStatuses, diagnostic, thresholds }`. Une table déclarative de 10 règles (code, condition, severity, label, catégorie `financial|bank`, formatter de la valeur, rationale du popover, prérequis de données pour le gating Option 2). Codes : `DEBT_TO_EBITDA_HIGH/MEDIUM`, `EBITDA_MARGIN_LOW`, `EBITDA_NEGATIVE_OR_ZERO`, `NEGATIVE_NET_INCOME`, `REVENUE_DECLINING` (gated sur N-1), `OVERDRAFT_DAYS_HIGH`, `REJECTED_PAYMENTS`, `LOW_CASH_POSITION`, `DSO_LONG`.
+- **RedFlagDetector** — façade conservée pour compat de contrat ; délègue intégralement à `RuleEngine.redFlags()`. *Évolution post-bloc 2 : la promotion de la table de règles en `RuleEngine` était indispensable pour produire le diagnostic 10 indicateurs et garantir que `redFlags`, tuiles, popovers et bullets du score partagent strictement le même référentiel.*
+- **ScoreExplainer** (module profond, pur) — `explain(dossier, redFlags) → ScoreBullet[]`. Produit 3 bullets max, priorise les angles rentabilité / endettement / flux bancaires. *Évolution : chaque bullet porte désormais `ruleCodes: string[]` permettant le cross-highlight bullet → tuile côté front.*
+- **CockpitAggregator** (orchestrateur fin) — `getCockpit(dossierId) → CockpitResponseDto`. Lit le dossier via le repository, calcule la `dataCoverage`, appelle `RuleEngine` + `ScoreExplainer`, compose la réponse. Pas de logique métier propre.
 - **RelanceDrafter** — `draft(dossier, missing[]) → { subject, body, missingDocs[] }`. Implémentation mock par défaut (template paramétré), branchement LLM réel commenté pour démo si clé API dispo.
 - **EventTracker** — store in-memory (`Array<Event>`), endpoints `POST /events` (ingest depuis front) et `GET /events` (export JSON pour analyse). Pas de persistance.
 - **Tracking middleware** — log chaque request avec sa duration, alimente le même store que les events front.
 
 ### Modules frontend (React/Vite/Tailwind)
 
-- **DossiersListPage** — liste les 4 dossiers + badge complétude. Appelle `GET /dossiers`.
-- **CockpitPage** — appelle `GET /dossiers/:id/cockpit` et compose la vue.
-- **CockpitView** (composition de sections) — orchestre la progressive disclosure : sections **Complétude + Anomalies + Décision** expanded par défaut, sections **Score + Santé financière + Flux bancaires** collapsed. La Complétude vient avant les Anomalies (gating documentaire d'abord). Chaque expand émet un event `cockpit.section.expanded`.
-- **RelanceModal** — email pré-rédigé éditable, bouton "Envoyer" qui émet `relance.sent` (pas d'envoi SMTP réel).
-- **DecisionPanel** — 3 boutons + champ justification. POST `/decisions` au submit.
-- **trackClient** (`lib/track.ts`) — `track(type, payload)` log console + POST `/events`. Wrapper unique, pas d'appel direct ailleurs.
-- **api wrapper** (`lib/api.ts`) — fetch + gestion erreurs, base URL via proxy Vite `/api`.
+> **Évolution post-bloc 2 — arborescence feature-based.** L'arbo initiale était `frontend/src/components/cockpit/*`. Au moment d'ajouter relances + décisions + tracking (bloc 3), le besoin de regrouper composants + hooks + types *par feature* est devenu évident. Arbo finale : `frontend/src/features/{dossiers-list,cockpit,relance,decision}/{components,hooks,...}`. Bénéfice : un dossier = une feature complète, plus simple à lire et à supprimer.
+
+- **DossiersListPage** (`features/dossiers-list/`) — liste les 4 dossiers + badge complétude. Appelle `GET /dossiers` via React Query.
+- **CockpitPage** (`features/cockpit/`) — appelle `GET /dossiers/:id/cockpit` et compose la vue. Fournit `CockpitProvider` (id) + `RuleHighlightProvider` (cross-highlight).
+- **Composition cockpit** — ordre de progressive disclosure : (1) `CockpitHeader` (entreprise + demande), (2) `CompletenessSection` *expanded*, (3) `RulesDiagnostic` *expanded* (10 tuiles groupées financial/bank + popovers méthodo), (4) `FinancialIndicators` + `BankFlowsCard` *collapsed* en grid 2-col sur `lg:`, (5) `DecisionPanel` *expanded* (synthèse score + 3 bullets cliquables + 3 boutons + justification).
+- **`RulesDiagnostic`** — composant clé du POC : reçoit `rulesDiagnostic` + `metricStatuses` + `financialThresholds`, rend 10 `MetricTile` (status ok/warn/alert/unknown, popover méthodo, ancrage scrollable). *Remplace `RedFlagsBanner` initialement spécifié.*
+- **`DecisionPanel`** — synthèse score (pastille + global_score) + 3 bullets `ScoreBullet` (chaque bullet scrolle + highlight les tuiles de `ruleCodes[]` via `useRuleHighlight`) + 3 boutons (approve / request_docs / reject) + textarea justification + `AlertDialog` de confirmation pour `reject`. POST `/decisions` au submit.
+- **`RelanceModal`** — Dialog shadcn, email pré-rédigé éditable (subject + body), bouton "Envoyer" → émet `relance.sent` (pas d'envoi SMTP réel) + ferme la modale.
+- **Composants extraits** — `MetricTile`, `SectionCard`, `CollapsibleSection`, `CockpitHeader` : extraits pour réutilisabilité et lisibilité (vs spec initiale qui ne les listait pas).
+- **`lib/track.ts`** — `track(type, payload)` log console + POST `/events`. Wrapper unique.
+- **`lib/api.ts`** — wrapper `fetch` + `ApiError` typé ; React Query l'appelle dans les hooks de features.
 
 ### Contrats API
 
@@ -89,14 +103,37 @@ L'écran est **instrumenté jour 1** : chaque interaction émet un event horodat
 
 ### Schéma `CockpitResponseDto`
 
+> **Évolution post-bloc 2 — DTO enrichi.** Le schéma initial (`completeness`, `redFlags`, `scoreExplanation.bullets`) ne suffisait pas pour alimenter `RulesDiagnostic` (statuts par indicateur, seuils, méthodologie) ni le cross-highlight (`ruleCodes` par bullet). Le DTO a été étendu de façon backward-compatible : les champs initiaux sont conservés, les nouveaux sont additifs.
+
 ```typescript
 type CockpitResponse = {
   dossier: AugmentedDossier;
   completeness: { score: number; isComplete: boolean; missing: MissingItem[] };
+  dataCoverage: {                       // Hybrid Option 2 — quelles données sont disponibles
+    hasPreviousYearLiasse: boolean;
+    bankMonthsCovered: number;
+    isBankFlowsExtrapolated: boolean;
+  };
   redFlags: Array<{ severity: 'low'|'medium'|'high'; code: string; label: string; value: string }>;
-  scoreExplanation: { bullets: string[] };
+  metricStatuses: Record<MetricKey, { status: 'ok'|'warn'|'alert'|'unknown'; unavailableReason?: string }>;
+  financialThresholds: Record<MetricKey, { warn?: number; alert?: number; unit: string }>;
+  rulesDiagnostic: Array<{              // 10 tuiles groupées
+    code: string;
+    metricKey: MetricKey;
+    category: 'financial'|'bank';
+    status: 'ok'|'warn'|'alert'|'unknown';
+    label: string;
+    valueLabel: string;
+    rationale: string;                  // popover méthodo
+    unavailableReason?: string;
+  }>;
+  scoreExplanation: {
+    bullets: Array<{ text: string; ruleCodes: string[] }>;   // ruleCodes → cross-highlight
+  };
 };
 ```
+
+Le champ `FinancialIndicators.revenuePreviousYear` est `number | null` côté backend (null si la liasse N-1 est manquante), ce qui désactive proprement la règle `REVENUE_DECLINING` (statut `unknown`).
 
 ### Décisions transverses
 
