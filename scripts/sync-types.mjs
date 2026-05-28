@@ -1,11 +1,6 @@
 #!/usr/bin/env node
-/**
- * Source unique des types d'API : backend/src/dossiers/types.ts.
- * Ce script le copie vers frontend/src/lib/api-types.gen.ts (avec header).
- *
- * Exécuté en predev et prebuild côté frontend pour garantir l'alignement
- * sans dépendre de la mémoire du dev. Pas de dépendance npm — juste fs.
- */
+// Copie backend/src/dossiers/types.ts → frontend/src/shared/types/api.gen.ts.
+// Lancé en predev/prebuild côté frontend pour garantir l'alignement.
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -23,16 +18,7 @@ if (!existsSync(SOURCE)) {
 const body = readFileSync(SOURCE, 'utf8');
 
 const header = `/* eslint-disable */
-/**
- * AUTO-GENERATED — ne pas éditer à la main.
- *
- * Source : backend/src/dossiers/types.ts
- * Script : scripts/sync-types.mjs (exécuté en predev / prebuild côté frontend)
- *
- * Pour modifier ces types : édite le fichier source côté backend puis relance
- * le frontend (\`npm run dev\`). Les types frontend-only vivent dans
- * frontend/src/lib/types.ts qui re-exporte ceux-ci.
- */
+// AUTO-GENERATED depuis backend/src/dossiers/types.ts — ne pas éditer.
 `;
 
 mkdirSync(dirname(TARGET), { recursive: true });

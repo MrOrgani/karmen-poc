@@ -1,5 +1,6 @@
 import { createRoute } from '@tanstack/react-router';
-import { CockpitPage, cockpitQuery } from '@/features/cockpit/CockpitPage';
+import { CockpitPage } from '@/features/cockpit/CockpitPage';
+import { cockpitQuery } from '@/features/cockpit/api';
 import { rootRoute } from './__root';
 
 export const dossierRoute = createRoute({

@@ -10,14 +10,12 @@ export function CockpitProvider({ dossierId, children }: { dossierId: string; ch
   return <CockpitContext.Provider value={{ dossierId }}>{children}</CockpitContext.Provider>;
 }
 
-/** Returns the current dossier id. Throws if used outside a `<CockpitProvider>`. */
 export function useDossierId(): string {
   const ctx = useContext(CockpitContext);
   if (!ctx) throw new Error('useDossierId must be used inside <CockpitProvider>');
   return ctx.dossierId;
 }
 
-/** Hook variant that returns undefined when outside the provider (for optional dependents). */
 export function useOptionalDossierId(): string | undefined {
   return useContext(CockpitContext)?.dossierId;
 }

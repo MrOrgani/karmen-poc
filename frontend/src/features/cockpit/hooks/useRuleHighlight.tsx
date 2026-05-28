@@ -9,15 +9,6 @@ import {
   type ReactNode,
 } from 'react';
 
-/**
- * Provider du système "click bullet décision → scroll + highlight ligne(s) du
- * Diagnostic règles". Avant ce module, le state vivait dans la route, qui
- * prop-drillait callback + set vers DecisionPanel et RulesDiagnostic. Refactor
- * vers un Context : la route redevient pure compo, et tout futur composant
- * (ScoreCard, Header, etc.) peut déclencher un highlight via `useHighlight()`
- * sans toucher au plumbing.
- */
-
 const HIGHLIGHT_DURATION_MS = 1800;
 
 type ContextValue = {

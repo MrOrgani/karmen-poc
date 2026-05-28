@@ -12,11 +12,27 @@ const MAX_BULLETS = 3;
 
 const SEVERITY_RANK: Record<Severity, number> = { high: 2, medium: 1, low: 0 };
 
-const PROFITABILITY_CODES = ['EBITDA_MARGIN_LOW', 'NEGATIVE_NET_INCOME', 'REVENUE_DECLINING'];
-const DEBT_CODES = ['DEBT_TO_EBITDA_HIGH', 'DEBT_TO_EBITDA_MEDIUM', 'EBITDA_NEGATIVE_OR_ZERO'];
-const CASH_CODES = ['OVERDRAFT_DAYS_HIGH', 'LOW_CASH_POSITION', 'REJECTED_PAYMENTS', 'DSO_LONG'];
+const PROFITABILITY_CODES = [
+  'EBITDA_MARGIN_LOW',
+  'NEGATIVE_NET_INCOME',
+  'REVENUE_DECLINING',
+];
+const DEBT_CODES = [
+  'DEBT_TO_EBITDA_HIGH',
+  'DEBT_TO_EBITDA_MEDIUM',
+  'EBITDA_NEGATIVE_OR_ZERO',
+];
+const CASH_CODES = [
+  'OVERDRAFT_DAYS_HIGH',
+  'LOW_CASH_POSITION',
+  'REJECTED_PAYMENTS',
+  'DSO_LONG',
+];
 
-function pickMostSevere(flags: RedFlag[], codes: string[]): RedFlag | undefined {
+function pickMostSevere(
+  flags: RedFlag[],
+  codes: string[],
+): RedFlag | undefined {
   return flags
     .filter((f) => codes.includes(f.code))
     .sort((a, b) => SEVERITY_RANK[b.severity] - SEVERITY_RANK[a.severity])[0];
@@ -53,8 +69,6 @@ export class ScoreExplainer {
       ? this.cashProblemBullet(fin, bank, cashFlag)
       : `Trésorerie saine et flux bancaires sans anomalie`;
 
-    // Les ruleCodes sont désormais dérivés du RuleEngine (SCORE_THEMES) —
-    // plus de duplication, mapping vérifié à la compile via RuleCode.
     const bullets: ScoreBullet[] = [
       { text: profitabilityText, ruleCodes: [...SCORE_THEMES.profitability] },
       { text: debtText, ruleCodes: [...SCORE_THEMES.debt] },

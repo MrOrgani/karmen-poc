@@ -11,22 +11,10 @@ import type {
   Severity,
 } from '../dossiers/types';
 
-/**
- * Source de vérité unique pour les 10 règles métier du diagnostic crédit.
- *
- * Avant ce module, les seuils, déclencheurs, libellés et rationales étaient
- * éparpillés dans 4 fichiers (red-flags.detector, metric-status, rules-diagnostic,
- * financial-thresholds.constants). Toute modification de règle exigeait 3 à 4
- * mutations coordonnées. Le RuleEngine centralise tout en un endroit, et expose
- * les projections nécessaires (red flags, statuses par tile, diagnostic complet,
- * thresholds UI) dérivées d'une seule évaluation.
- */
-
 type RuleInput = { fin: FinancialIndicators; bank: BankFlows };
 
 type RuleEvaluation = {
   status: MetricStatus;
-  /** Valeur formatée pour affichage (toujours renseignée hors unknown). */
   value: string;
   unavailableReason?: string;
 };
@@ -34,7 +22,6 @@ type RuleEvaluation = {
 type RuleEmission = {
   redFlagCode: string;
   severity: Severity;
-  /** Valeur formatée différemment dans le red flag (vs diagnostic). */
   value: string;
   threshold: string;
   rationale: string;
@@ -56,14 +43,10 @@ type RuleDefinition = {
   code: RuleCode;
   category: RedFlagCategory;
   label: string;
-  /** Tile MetricStatuses alimentée par cette règle (ex. 'ebitda', 'totalDebt'). */
   metricKey: keyof MetricStatuses;
-  /** Résumé du seuil affiché en popover diagnostic. */
   threshold: string;
   rationale: string;
-  /** Calcule statut + valeur courante de la règle. */
   evaluate: (input: RuleInput) => RuleEvaluation;
-  /** Convertit l'évaluation en 0 ou 1 red flag (compat historique). */
   toRedFlags: (evaluation: RuleEvaluation, input: RuleInput) => RuleEmission[];
 };
 
@@ -263,8 +246,7 @@ const RULES: RuleDefinition[] = [
     },
     toRedFlags: (e, { fin, bank }) => {
       if (e.status === 'ok') return [];
-      // Conserve le comportement historique : LOW_CASH_POSITION uniquement
-      // si trésorerie < sorties moyennes (≈ status alert ou warn ≤ 1 mois).
+      // Seuil historique LOW_CASH_POSITION : cash strictement < sorties.
       if (fin.cashPosition >= bank.monthlyOutflowsAverage) return [];
       return [
         {
@@ -379,7 +361,6 @@ const RULES: RuleDefinition[] = [
   },
 ];
 
-/** Index des thèmes pour le ScoreExplainer (remplace les triplets hardcodés). */
 export const SCORE_THEMES = {
   profitability: [
     'ebitda_margin',
@@ -396,7 +377,6 @@ export const SCORE_THEMES = {
   ] as RuleCode[],
 } as const;
 
-/** Sévérité d'un statut pour aggrégation tile (alert > warn > unknown > ok). */
 const STATUS_RANK: Record<MetricStatus, number> = {
   ok: 0,
   unknown: 1,
@@ -410,7 +390,6 @@ function worstStatus(a: MetricStatus, b: MetricStatus): MetricStatus {
 
 @Injectable()
 export class RuleEngine {
-  /** Évalue toutes les règles une fois — les projections se dérivent du résultat. */
   evaluateAll(input: RuleInput): Map<RuleCode, RuleEvaluation> {
     const map = new Map<RuleCode, RuleEvaluation>();
     for (const rule of RULES) {
@@ -457,8 +436,6 @@ export class RuleEngine {
       overdraftDaysLast12m: 'ok',
       rejectedPaymentsCount: 'ok',
     };
-    // Initialise à 'ok' partout, puis remplace par le pire statut de chaque
-    // règle alimentant la tile. Cas particulier : revenue 'unknown' si N-1 absente.
     const seen = new Set<keyof MetricStatuses>();
     for (const rule of RULES) {
       const evaluation = evaluations.get(rule.code)!;
@@ -490,19 +467,15 @@ export class RuleEngine {
     });
   }
 
-  /** Thresholds UI dérivés des règles (1 entrée par tile MetricStatuses). */
   tileThresholds(): FinancialThresholds {
     const out: FinancialThresholds = {
-      // Sorties moyennes : tile informationnelle sans règle dédiée.
       monthlyOutflowsAverage: {
         rule: 'Comparer à la trésorerie disponible',
         rationale:
           "Décaissements moyens sur 12 mois. Une trésorerie inférieure à ce niveau signale moins d'un mois de runway.",
       },
     };
-    // Pour les tiles avec plusieurs règles (ex. ebitda → margin + positive),
-    // la première rencontrée gagne le popover — l'ordre du tableau RULES
-    // détermine la "primaire" (debt_to_ebitda pour totalDebt, ebitda_margin pour ebitda).
+    // Tile partagée par plusieurs règles : la 1re rencontrée gagne le popover (ordre de RULES = priorité).
     for (const rule of RULES) {
       if (rule.metricKey in out) continue;
       out[rule.metricKey] = { rule: rule.threshold, rationale: rule.rationale };

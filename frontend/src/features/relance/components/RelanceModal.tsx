@@ -12,7 +12,7 @@ import { Label } from '@/shared/ui/label';
 import { Skeleton } from '@/shared/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert';
 import { AlertCircle, Send, Sparkles } from 'lucide-react';
-import { draftRelance, type RelanceDraft } from '@/features/relance/api';
+import { useDraftRelance } from '@/features/relance/hooks/useDraftRelance';
 import { track } from '@/shared/lib/track';
 
 type Props = {
@@ -22,64 +22,44 @@ type Props = {
 };
 
 export function RelanceModal({ dossierId, open, onOpenChange }: Props) {
-  const [draft, setDraft] = useState<RelanceDraft | null>(null);
-  const [subject, setSubject] = useState('');
-  const [body, setBody] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { data: draft, isPending, error } = useDraftRelance(dossierId, open);
+  const [form, setForm] = useState<{ subject: string; body: string }>({ subject: '', body: '' });
+  const [seededDraft, setSeededDraft] = useState<typeof draft>(undefined);
   const [sent, setSent] = useState(false);
+  const [lastOpen, setLastOpen] = useState(open);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Reset transient state on open; abort in-flight fetch on close/unmount.
-  useEffect(() => {
-    if (!open) {
-      setDraft(null);
-      setSubject('');
-      setBody('');
-      setError(null);
+  // Seed/reset pendant le render plutôt qu'en useEffect : voir
+  // https://react.dev/reference/react/useState#storing-information-from-previous-renders
+  if (draft && draft !== seededDraft) {
+    setSeededDraft(draft);
+    setForm({ subject: draft.subject, body: draft.body });
+    track('relance.draft.generated', dossierId, { missingCount: draft.missingDocs.length });
+  }
+
+  if (open !== lastOpen) {
+    setLastOpen(open);
+    if (open) {
+      track('relance.modal.opened', dossierId);
+    } else {
       setSent(false);
-      return;
+      setSeededDraft(undefined);
     }
+  }
 
-    const controller = new AbortController();
-    track('relance.modal.opened', dossierId);
-    setLoading(true);
-    setError(null);
-
-    draftRelance(dossierId, { signal: controller.signal })
-      .then((d) => {
-        if (controller.signal.aborted) return;
-        setDraft(d);
-        setSubject(d.subject);
-        setBody(d.body);
-        track('relance.draft.generated', dossierId, { missingCount: d.missingDocs.length });
-      })
-      .catch((err: unknown) => {
-        if (controller.signal.aborted) return;
-        const message = err instanceof Error ? err.message : String(err);
-        if (import.meta.env.DEV) console.error('🚨 [RelanceModal] draft failed', err);
-        setError(message);
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
-      });
-
-    return () => {
-      controller.abort();
-    };
-  }, [open, dossierId]);
-
-  // Clear pending close timer on unmount / re-open.
   useEffect(() => {
     return () => {
       if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
     };
   }, []);
 
+  const errorMessage = error ? (error instanceof Error ? error.message : String(error)) : null;
+  const loading = isPending && open;
+
   const handleSend = () => {
     if (sent || loading || error) return;
     setSent(true);
-    track('relance.sent', dossierId, { subject, bodyLength: body.length });
+    track('relance.sent', dossierId, { subject: form.subject, bodyLength: form.body.length });
     closeTimerRef.current = setTimeout(() => {
       onOpenChange(false);
       closeTimerRef.current = null;
@@ -110,7 +90,7 @@ export function RelanceModal({ dossierId, open, onOpenChange }: Props) {
           <Alert variant="destructive">
             <AlertCircle aria-hidden className="h-4 w-4" />
             <AlertTitle>Génération échouée</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
+            <AlertDescription>{errorMessage}</AlertDescription>
           </Alert>
         )}
 
@@ -124,8 +104,8 @@ export function RelanceModal({ dossierId, open, onOpenChange }: Props) {
                 id="relance-subject"
                 name="subject"
                 type="text"
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
+                value={form.subject}
+                onChange={(e) => setForm((f) => ({ ...f, subject: e.target.value }))}
                 disabled={sent}
                 autoComplete="off"
                 spellCheck
@@ -140,8 +120,8 @@ export function RelanceModal({ dossierId, open, onOpenChange }: Props) {
               <textarea
                 id="relance-body"
                 name="body"
-                value={body}
-                onChange={(e) => setBody(e.target.value)}
+                value={form.body}
+                onChange={(e) => setForm((f) => ({ ...f, body: e.target.value }))}
                 disabled={sent}
                 rows={10}
                 autoComplete="off"

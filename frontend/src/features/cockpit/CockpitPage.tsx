@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useParams, Link } from '@tanstack/react-router';
-import { useQuery, queryOptions } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { AlertCircle, ArrowLeft } from 'lucide-react';
 import { ApiError } from '@/shared/lib/http';
 import { track } from '@/shared/lib/track';
@@ -15,13 +15,7 @@ import { RulesDiagnostic } from './components/RulesDiagnostic';
 import { CockpitProvider } from './hooks/useDossierId';
 import { RuleHighlightProvider } from './hooks/useRuleHighlight';
 import { DecisionPanel } from '@/features/decision/components/DecisionPanel';
-import { getCockpit } from './api';
-
-export const cockpitQuery = (id: string) =>
-  queryOptions({
-    queryKey: ['cockpit', id] as const,
-    queryFn: () => getCockpit(id),
-  });
+import { cockpitQuery } from './api';
 
 export function CockpitPage() {
   const { id } = useParams({ from: '/dossiers/$id' });

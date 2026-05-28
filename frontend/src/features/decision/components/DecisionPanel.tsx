@@ -14,17 +14,12 @@ import {
   AlertDialogTrigger,
 } from '@/shared/ui/alert-dialog';
 import { CheckCircle2, HelpCircle, XCircle, FileSignature, Loader2, ArrowRight } from 'lucide-react';
-import { recordDecision, type DecisionType } from '@/features/decision/api';
+import { type DecisionType } from '@/features/decision/api';
+import { useRecordDecision } from '@/features/decision/hooks/useRecordDecision';
 import { useDossierId } from '@/features/cockpit/hooks/useDossierId';
 import { useHighlight } from '@/features/cockpit/hooks/useRuleHighlight';
 import type { AugmentedDossier, RiskBucket, ScoreExplanation } from '@/shared/types';
 import { cn } from '@/shared/lib/utils';
-
-type Status =
-  | { phase: 'idle' }
-  | { phase: 'submitting'; decision: DecisionType }
-  | { phase: 'done'; decision: DecisionType; ts: number }
-  | { phase: 'error'; decision: DecisionType; message: string };
 
 const LABEL: Record<DecisionType, string> = {
   approve: 'approuvé',
@@ -53,23 +48,20 @@ export function DecisionPanel({ score, explanation }: Props) {
   const dossierId = useDossierId();
   const highlight = useHighlight();
   const [justification, setJustification] = useState('');
-  const [status, setStatus] = useState<Status>({ phase: 'idle' });
+  const [pendingDecision, setPendingDecision] = useState<DecisionType | null>(null);
+  const mutation = useRecordDecision(dossierId);
 
-  const handle = async (decision: DecisionType) => {
-    setStatus({ phase: 'submitting', decision });
-    try {
-      const res = await recordDecision(dossierId, decision, justification);
-      setStatus({ phase: 'done', decision, ts: res.ts });
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      if (import.meta.env.DEV) console.error('🚨 [DecisionPanel.handle]', err);
-      setStatus({ phase: 'error', decision, message });
-    }
+  const handle = (decision: DecisionType) => {
+    setPendingDecision(decision);
+    mutation.mutate({ decision, justification });
   };
 
-  const submitting = status.phase === 'submitting';
-  const done = status.phase === 'done';
+  const submitting = mutation.isPending;
+  const done = mutation.isSuccess;
+  const errored = mutation.isError;
   const disabledAll = submitting || done;
+  const errorMessage = errored ? (mutation.error?.message ?? 'Erreur inconnue') : null;
+  const submittedDecision = pendingDecision;
 
   return (
     <Card className="border-karmen-border-blue/60">
@@ -114,26 +106,32 @@ export function DecisionPanel({ score, explanation }: Props) {
           </ul>
         </section>
 
-        <div className="flex flex-wrap gap-2">
-          <Button
-            onClick={() => handle('approve')}
+        <div>
+          <label htmlFor="justification" className="block text-xs uppercase tracking-widest text-karmen-mute font-semibold mb-1.5">
+            Justification (1 phrase suffit)
+          </label>
+          <textarea
+            id="justification"
+            name="justification"
+            value={justification}
+            onChange={(e) => setJustification(e.target.value)}
             disabled={disabledAll}
-            className="bg-karmen-blue hover:bg-karmen-blue-dark text-white font-medium"
-          >
-            {submitting && status.decision === 'approve' ? (
-              <Loader2 aria-hidden className="h-4 w-4 mr-2 animate-spin" />
-            ) : (
-              <CheckCircle2 aria-hidden className="h-4 w-4 mr-2" />
-            )}
-            Approuver
-          </Button>
+            rows={2}
+            autoComplete="off"
+            maxLength={500}
+            className="w-full rounded-md border border-karmen-border-blue/60 bg-white px-3 py-2 text-sm text-karmen-ink placeholder:text-karmen-mute disabled:bg-muted disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-karmen-blue focus-visible:ring-offset-2 focus-visible:border-karmen-blue"
+            placeholder="Ex&nbsp;: bonne rentabilité, trésorerie tendue mais flux stables…"
+          />
+        </div>
+
+        <div className="flex flex-wrap justify-end gap-2">
           <Button
             onClick={() => handle('request_docs')}
             disabled={disabledAll}
             variant="outline"
             className="border-karmen-border-blue text-karmen-marine hover:bg-karmen-pale-blue"
           >
-            {submitting && status.decision === 'request_docs' ? (
+            {submitting && submittedDecision === 'request_docs' ? (
               <Loader2 aria-hidden className="h-4 w-4 mr-2 animate-spin" />
             ) : (
               <HelpCircle aria-hidden className="h-4 w-4 mr-2" />
@@ -147,7 +145,7 @@ export function DecisionPanel({ score, explanation }: Props) {
                 variant="outline"
                 className="border-destructive/40 text-destructive hover:bg-destructive/5"
               >
-                {submitting && status.decision === 'reject' ? (
+                {submitting && submittedDecision === 'reject' ? (
                   <Loader2 aria-hidden className="h-4 w-4 mr-2 animate-spin" />
                 ) : (
                   <XCircle aria-hidden className="h-4 w-4 mr-2" />
@@ -175,40 +173,34 @@ export function DecisionPanel({ score, explanation }: Props) {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
-        </div>
-
-        <div>
-          <label htmlFor="justification" className="block text-xs uppercase tracking-widest text-karmen-mute font-semibold mb-1.5">
-            Justification (1 phrase suffit)
-          </label>
-          <textarea
-            id="justification"
-            name="justification"
-            value={justification}
-            onChange={(e) => setJustification(e.target.value)}
+          <Button
+            onClick={() => handle('approve')}
             disabled={disabledAll}
-            rows={2}
-            autoComplete="off"
-            maxLength={500}
-            className="w-full rounded-md border border-karmen-border-blue/60 bg-white px-3 py-2 text-sm text-karmen-ink placeholder:text-karmen-mute disabled:bg-muted disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-karmen-blue focus-visible:ring-offset-2 focus-visible:border-karmen-blue"
-            placeholder="Ex&nbsp;: bonne rentabilité, trésorerie tendue mais flux stables…"
-          />
+            className="bg-karmen-blue hover:bg-karmen-blue-dark text-white font-medium"
+          >
+            {submitting && submittedDecision === 'approve' ? (
+              <Loader2 aria-hidden className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <CheckCircle2 aria-hidden className="h-4 w-4 mr-2" />
+            )}
+            Approuver
+          </Button>
         </div>
 
-        {status.phase === 'done' && (
+        {done && mutation.data && submittedDecision && (
           <Alert className="border-karmen-lime bg-karmen-lime/20 text-karmen-marine" aria-live="polite">
             <CheckCircle2 aria-hidden className="h-4 w-4" />
             <AlertDescription>
-              Dossier <strong>{LABEL[status.decision]}</strong> · enregistré à <span className="tabular-nums">{new Date(status.ts).toLocaleTimeString('fr-FR')}</span>.
+              Dossier <strong>{LABEL[submittedDecision]}</strong> · enregistré à <span className="tabular-nums">{new Date(mutation.data.ts).toLocaleTimeString('fr-FR')}</span>.
             </AlertDescription>
           </Alert>
         )}
 
-        {status.phase === 'error' && (
+        {errored && submittedDecision && (
           <Alert variant="destructive" aria-live="polite">
             <AlertDescription className="flex flex-wrap items-center gap-3">
-              <span>Erreur lors de l’enregistrement&nbsp;: {status.message}</span>
-              <Button size="sm" variant="outline" onClick={() => handle(status.decision)}>
+              <span>Erreur lors de l’enregistrement&nbsp;: {errorMessage}</span>
+              <Button size="sm" variant="outline" onClick={() => handle(submittedDecision)}>
                 Réessayer
               </Button>
             </AlertDescription>

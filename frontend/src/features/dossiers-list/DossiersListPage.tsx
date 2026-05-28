@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { queryOptions, useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import {
   AlertCircle,
@@ -18,7 +18,7 @@ import { formatCurrency } from '@/shared/lib/format';
 import { track } from '@/shared/lib/track';
 import { cn } from '@/shared/lib/utils';
 import type { FinancingType, RiskBucket } from '@/shared/types';
-import { getDossiers } from './api';
+import { dossiersQuery } from './api';
 
 const RISK_LABEL: Record<RiskBucket, string> = { low: 'Risque faible', medium: 'Risque modéré', high: 'Risque élevé' };
 
@@ -40,11 +40,6 @@ const TYPE_ICON: Record<FinancingType, typeof Banknote> = {
   loan: Landmark,
   factoring: Banknote,
 };
-
-export const dossiersQuery = queryOptions({
-  queryKey: ['dossiers'] as const,
-  queryFn: getDossiers,
-});
 
 export function DossiersListPage() {
   const { data, isPending, error, refetch } = useQuery(dossiersQuery);

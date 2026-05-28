@@ -1,5 +1,6 @@
 import { createRoute } from '@tanstack/react-router';
-import { DossiersListPage, dossiersQuery } from '@/features/dossiers-list/DossiersListPage';
+import { DossiersListPage } from '@/features/dossiers-list/DossiersListPage';
+import { dossiersQuery } from '@/features/dossiers-list/api';
 import { rootRoute } from './__root';
 
 export const indexRoute = createRoute({

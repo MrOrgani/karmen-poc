@@ -115,7 +115,7 @@ export function CompletenessSection({ completeness, documents }: Props) {
           </section>
         )}
 
-        <div>
+        <div className="flex justify-end">
           <Button
             variant={isComplete ? 'outline' : 'default'}
             className={isComplete ? 'border-karmen-border-blue' : 'bg-karmen-blue hover:bg-karmen-blue-dark'}

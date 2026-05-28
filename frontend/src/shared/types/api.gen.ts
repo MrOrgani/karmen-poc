@@ -1,14 +1,5 @@
 /* eslint-disable */
-/**
- * AUTO-GENERATED — ne pas éditer à la main.
- *
- * Source : backend/src/dossiers/types.ts
- * Script : scripts/sync-types.mjs (exécuté en predev / prebuild côté frontend)
- *
- * Pour modifier ces types : édite le fichier source côté backend puis relance
- * le frontend (`npm run dev`). Les types frontend-only vivent dans
- * frontend/src/lib/types.ts qui re-exporte ceux-ci.
- */
+// AUTO-GENERATED depuis backend/src/dossiers/types.ts — ne pas éditer.
 export type FinancingType = 'loan' | 'factoring';
 export type RiskBucket = 'low' | 'medium' | 'high';
 export type DocumentType = 'liasse_fiscale' | 'releve_bancaire';

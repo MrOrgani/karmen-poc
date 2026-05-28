@@ -1,15 +1,6 @@
-import type { AugmentedDossier, DataCoverage } from './types';
 import { documentRequirementsFor } from './document-requirements';
+import type { AugmentedDossier, DataCoverage } from './types';
 
-/**
- * Dérive la couverture documentaire d'un dossier — quels KPIs sont calculables
- * et lesquels reposent sur une extrapolation. Pivot de l'Option 2 hybride :
- * hard-gating (revenuePreviousYear nullifiée) + soft-gating (UI signale les
- * KPIs bancaires extrapolés sous le seuil minimum requis).
- *
- * Les seuils proviennent de `documentRequirementsFor(type)` — source unique
- * partagée avec CompletenessEngine.
- */
 export function computeDataCoverage(dossier: AugmentedDossier): DataCoverage {
   const requirements = documentRequirementsFor(dossier.financing_request.type);
 
@@ -23,9 +14,7 @@ export function computeDataCoverage(dossier: AugmentedDossier): DataCoverage {
     !requirements.requirePreviousYearLiasse ||
     (maxYear !== null && liasseYears.includes(maxYear - 1));
 
-  const releves = dossier.documents.filter(
-    (d) => d.type === 'releve_bancaire',
-  );
+  const releves = dossier.documents.filter((d) => d.type === 'releve_bancaire');
   const monthsByAccount = new Map<string, number>();
   for (const doc of releves) {
     const key = doc.metadata.account ?? doc.metadata.bank ?? doc.id;
