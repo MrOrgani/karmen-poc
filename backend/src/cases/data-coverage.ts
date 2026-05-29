@@ -14,7 +14,9 @@ export function computeDataCoverage(caseData: AugmentedCase): DataCoverage {
     !requirements.requirePreviousYearLiasse ||
     (maxYear !== null && liasseYears.includes(maxYear - 1));
 
-  const releves = caseData.documents.filter((d) => d.type === 'releve_bancaire');
+  const releves = caseData.documents.filter(
+    (d) => d.type === 'releve_bancaire',
+  );
   const monthsByAccount = new Map<string, number>();
   for (const doc of releves) {
     const key = doc.metadata.account ?? doc.metadata.bank ?? doc.id;

@@ -1,4 +1,4 @@
-import { post } from '@/shared/lib/http';
+import { post } from "@/shared/lib/http";
 
 export type FollowUpDraft = {
   subject: string;

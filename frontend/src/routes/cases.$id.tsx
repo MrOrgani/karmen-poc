@@ -1,11 +1,12 @@
-import { createFileRoute, notFound } from '@tanstack/react-router';
-import { useSuspenseQuery } from '@tanstack/react-query';
-import { getCaseQueryOptions } from '@/features/cases/hooks/query-options';
-import { CaseCockpit } from '@/features/cases/components/case-cockpit';
-import { RoutePending } from '@/shared/components/route-pending';
-import { ApiError } from '@/shared/lib/http';
+/* eslint-disable react-refresh/only-export-components -- TanStack file-based route exports `Route` alongside the component */
+import { createFileRoute, notFound } from "@tanstack/react-router";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { getCaseQueryOptions } from "@/features/cases/hooks/query-options";
+import { CaseCockpit } from "@/features/cases/components/case-cockpit";
+import { RoutePending } from "@/shared/components/route-pending";
+import { ApiError } from "@/shared/lib/http";
 
-export const Route = createFileRoute('/cases/$id')({
+export const Route = createFileRoute("/cases/$id")({
   component: CasePage,
   pendingComponent: RoutePending,
   loader: async ({ context, params }) => {

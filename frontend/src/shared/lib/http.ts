@@ -1,17 +1,17 @@
-import axios, { AxiosError, type AxiosRequestConfig } from 'axios';
+import axios, { AxiosError, type AxiosRequestConfig } from "axios";
 
 export class ApiError extends Error {
   readonly status: number;
   constructor(status: number, message: string) {
     super(message);
     this.status = status;
-    this.name = 'ApiError';
+    this.name = "ApiError";
   }
 }
 
 export const apiClient = axios.create({
-  baseURL: '/api',
-  headers: { 'Content-Type': 'application/json' },
+  baseURL: "/api",
+  headers: { "Content-Type": "application/json" },
 });
 
 apiClient.interceptors.response.use(
@@ -20,14 +20,17 @@ apiClient.interceptors.response.use(
     if (err.response) {
       throw new ApiError(
         err.response.status,
-        err.response.status + ' ' + err.response.statusText,
+        err.response.status + " " + err.response.statusText,
       );
     }
-    throw new ApiError(0, 'Backend injoignable (' + err.message + ')');
+    throw new ApiError(0, "Backend injoignable (" + err.message + ")");
   },
 );
 
-export async function get<T>(path: string, config?: AxiosRequestConfig): Promise<T> {
+export async function get<T>(
+  path: string,
+  config?: AxiosRequestConfig,
+): Promise<T> {
   const response = await apiClient.get<T>(path, config);
   return response.data;
 }

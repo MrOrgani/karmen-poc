@@ -15,11 +15,6 @@ import { CasesRepository } from './cases.repository';
     RuleEngine,
     ScoreExplainer,
   ],
-  exports: [
-    CasesRepository,
-    CompletenessEngine,
-    RuleEngine,
-    ScoreExplainer,
-  ],
+  exports: [CasesRepository, CompletenessEngine, RuleEngine, ScoreExplainer],
 })
 export class CasesModule {}

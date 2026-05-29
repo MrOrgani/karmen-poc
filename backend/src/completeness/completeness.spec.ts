@@ -1,5 +1,9 @@
 import { CompletenessEngine } from './completeness.engine';
-import type { AugmentedCase, CaseDocument, FinancingType } from '../cases/types';
+import type {
+  AugmentedCase,
+  CaseDocument,
+  FinancingType,
+} from '../cases/types';
 
 const baseFinancials = {
   revenue: 100000,
@@ -23,30 +27,75 @@ function makeCase(opts: {
   documents: CaseDocument[];
 }): AugmentedCase {
   return {
-    company: { id: 'c-x', name: 'X', siren: '0', businessType: '', legalCategory: '', codeNaf: '', creationDate: '', address: '', countryCode: 'FR', postalCode: '', owner: '' },
+    company: {
+      id: 'c-x',
+      name: 'X',
+      siren: '0',
+      businessType: '',
+      legalCategory: '',
+      codeNaf: '',
+      creationDate: '',
+      address: '',
+      countryCode: 'FR',
+      postalCode: '',
+      owner: '',
+    },
     financing_request: {
-      id: opts.id ?? 'fr-x', type: opts.type ?? 'loan', status: 'pending_review', company_id: 'c-x',
-      fundUsage: '', rejectedReason: null, amount: 10000, durationInMonth: 12, interestRate: 5,
+      id: opts.id ?? 'fr-x',
+      type: opts.type ?? 'loan',
+      status: 'pending_review',
+      company_id: 'c-x',
+      fundUsage: '',
+      rejectedReason: null,
+      amount: 10000,
+      durationInMonth: 12,
+      interestRate: 5,
     },
     documents: opts.documents,
-    score: { id: 's-x', financing_request_id: opts.id ?? 'fr-x', risk_bucket: 'low', global_score: 80 },
+    score: {
+      id: 's-x',
+      financing_request_id: opts.id ?? 'fr-x',
+      risk_bucket: 'low',
+      global_score: 80,
+    },
     financialIndicators: baseFinancials,
     bankFlows: baseFlows,
   };
 }
 
 const liasse = (id: string, year: number): CaseDocument => ({
-  id, name: `Liasse ${year}`, type: 'liasse_fiscale', company_id: 'c-x', financing_request_id: 'fr-x',
+  id,
+  name: `Liasse ${year}`,
+  type: 'liasse_fiscale',
+  company_id: 'c-x',
+  financing_request_id: 'fr-x',
   metadata: { year },
 });
 
-const releve = (id: string, bank: string, account: string, months: number): CaseDocument => ({
-  id, name: `Relevés ${bank}`, type: 'releve_bancaire', company_id: 'c-x', financing_request_id: 'fr-x',
+const releve = (
+  id: string,
+  bank: string,
+  account: string,
+  months: number,
+): CaseDocument => ({
+  id,
+  name: `Relevés ${bank}`,
+  type: 'releve_bancaire',
+  company_id: 'c-x',
+  financing_request_id: 'fr-x',
   metadata: { bank, account, months_covered: months },
 });
 
-const releveNoAccount = (id: string, bank: string, months: number): CaseDocument => ({
-  id, name: `Relevés ${bank}`, type: 'releve_bancaire', company_id: 'c-x', financing_request_id: 'fr-x',
+const releveNoAccount = (
+  id: string,
+  bank: string,
+  months: number,
+): CaseDocument => ({
+  id,
+  name: `Relevés ${bank}`,
+  type: 'releve_bancaire',
+  company_id: 'c-x',
+  financing_request_id: 'fr-x',
   metadata: { bank, months_covered: months },
 });
 
@@ -55,7 +104,11 @@ describe('CompletenessEngine', () => {
 
   it('Brasserie-like — 2 liasses + 12 mois → 100% complet', () => {
     const caseData = makeCase({
-      documents: [liasse('d1', 2023), liasse('d2', 2024), releve('d3', 'Crédit Agricole', 'FR76A', 12)],
+      documents: [
+        liasse('d1', 2023),
+        liasse('d2', 2024),
+        releve('d3', 'Crédit Agricole', 'FR76A', 12),
+      ],
     });
     const result = engine.check(caseData);
     expect(result.isComplete).toBe(true);
@@ -68,7 +121,9 @@ describe('CompletenessEngine', () => {
     });
     const result = engine.check(caseData);
     expect(result.isComplete).toBe(false);
-    const liasseMissing = result.missing.find((m) => m.type === 'liasse_fiscale');
+    const liasseMissing = result.missing.find(
+      (m) => m.type === 'liasse_fiscale',
+    );
     expect(liasseMissing).toBeDefined();
     expect(liasseMissing?.reason).toContain('1/2');
   });
@@ -76,18 +131,26 @@ describe('CompletenessEngine', () => {
   it('Fleurs-like — LCL avec 10 mois → missing releve_bancaire mentionne 10 et LCL', () => {
     const caseData = makeCase({
       type: 'factoring',
-      documents: [liasse('d1', 2023), liasse('d2', 2024), releve('d3', 'LCL', 'FR76L', 10)],
+      documents: [
+        liasse('d1', 2023),
+        liasse('d2', 2024),
+        releve('d3', 'LCL', 'FR76L', 10),
+      ],
     });
     const result = engine.check(caseData);
     expect(result.isComplete).toBe(false);
-    const releveMissing = result.missing.find((m) => m.type === 'releve_bancaire');
+    const releveMissing = result.missing.find(
+      (m) => m.type === 'releve_bancaire',
+    );
     expect(releveMissing).toBeDefined();
     expect(releveMissing?.reason).toContain('10');
     expect(releveMissing?.reason).toContain('LCL');
   });
 
   it('aucun relevé bancaire fourni → missing item explicite, isComplete false', () => {
-    const caseData = makeCase({ documents: [liasse('d1', 2023), liasse('d2', 2024)] });
+    const caseData = makeCase({
+      documents: [liasse('d1', 2023), liasse('d2', 2024)],
+    });
     const result = engine.check(caseData);
     expect(result.isComplete).toBe(false);
     const missing = result.missing.find((m) => m.type === 'releve_bancaire');
@@ -98,7 +161,8 @@ describe('CompletenessEngine', () => {
   it('même compte avec 2 docs (6 + 6 mois) → 12 mois total, isComplete true', () => {
     const caseData = makeCase({
       documents: [
-        liasse('d1', 2023), liasse('d2', 2024),
+        liasse('d1', 2023),
+        liasse('d2', 2024),
         releve('d3', 'BNP Paribas', 'FR76SAME', 6),
         releve('d4', 'BNP Paribas', 'FR76SAME', 6),
       ],
@@ -110,7 +174,8 @@ describe('CompletenessEngine', () => {
   it('Transport Leclerc-like — 2 comptes (SG + BNP) × 12 mois → checks indépendants, complet', () => {
     const caseData = makeCase({
       documents: [
-        liasse('d1', 2023), liasse('d2', 2024),
+        liasse('d1', 2023),
+        liasse('d2', 2024),
         releve('d3', 'Société Générale', 'FR76SG', 12),
         releve('d4', 'BNP Paribas', 'FR76BNP', 12),
       ],
@@ -122,24 +187,33 @@ describe('CompletenessEngine', () => {
   // ─── Edge cases ──────────────────────────────────────────
 
   it('0 relevé + 2 liasses → missing relevé bancaire, isComplete false', () => {
-    const caseData = makeCase({ documents: [liasse('d1', 2023), liasse('d2', 2024)] });
+    const caseData = makeCase({
+      documents: [liasse('d1', 2023), liasse('d2', 2024)],
+    });
     const result = engine.check(caseData);
     expect(result.isComplete).toBe(false);
-    expect(result.missing.find((m) => m.type === 'releve_bancaire')).toBeDefined();
+    expect(
+      result.missing.find((m) => m.type === 'releve_bancaire'),
+    ).toBeDefined();
   });
 
   it('0 document du tout → missing items pour liasse ET relevé', () => {
     const caseData = makeCase({ documents: [] });
     const result = engine.check(caseData);
     expect(result.isComplete).toBe(false);
-    expect(result.missing.find((m) => m.type === 'liasse_fiscale')).toBeDefined();
-    expect(result.missing.find((m) => m.type === 'releve_bancaire')).toBeDefined();
+    expect(
+      result.missing.find((m) => m.type === 'liasse_fiscale'),
+    ).toBeDefined();
+    expect(
+      result.missing.find((m) => m.type === 'releve_bancaire'),
+    ).toBeDefined();
   });
 
   it('relevés sans account, même banque → 1 seul bucket (somme des mois)', () => {
     const caseData = makeCase({
       documents: [
-        liasse('d1', 2023), liasse('d2', 2024),
+        liasse('d1', 2023),
+        liasse('d2', 2024),
         releveNoAccount('d3', 'BNP Paribas', 6),
         releveNoAccount('d4', 'BNP Paribas', 6),
       ],
@@ -151,7 +225,8 @@ describe('CompletenessEngine', () => {
   it('relevés sans account, banques différentes → buckets distincts', () => {
     const caseData = makeCase({
       documents: [
-        liasse('d1', 2023), liasse('d2', 2024),
+        liasse('d1', 2023),
+        liasse('d2', 2024),
         releveNoAccount('d3', 'BNP Paribas', 12),
         releveNoAccount('d4', 'LCL', 8),
       ],
@@ -166,7 +241,11 @@ describe('CompletenessEngine', () => {
 
   it('months_covered exactement = 12 (boundary) → considéré complet', () => {
     const caseData = makeCase({
-      documents: [liasse('d1', 2023), liasse('d2', 2024), releve('d3', 'BNP', 'FR76X', 12)],
+      documents: [
+        liasse('d1', 2023),
+        liasse('d2', 2024),
+        releve('d3', 'BNP', 'FR76X', 12),
+      ],
     });
     const result = engine.check(caseData);
     expect(result.isComplete).toBe(true);
@@ -174,7 +253,11 @@ describe('CompletenessEngine', () => {
 
   it('months_covered = 11 (juste sous le seuil) → missing', () => {
     const caseData = makeCase({
-      documents: [liasse('d1', 2023), liasse('d2', 2024), releve('d3', 'BNP', 'FR76X', 11)],
+      documents: [
+        liasse('d1', 2023),
+        liasse('d2', 2024),
+        releve('d3', 'BNP', 'FR76X', 11),
+      ],
     });
     const result = engine.check(caseData);
     expect(result.isComplete).toBe(false);
@@ -213,16 +296,24 @@ describe('CompletenessEngine', () => {
   it('reason de missing liasse inclut le détail dans details', () => {
     const caseData = makeCase({ documents: [liasse('d1', 2024)] });
     const result = engine.check(caseData);
-    const liasseMissing = result.missing.find((m) => m.type === 'liasse_fiscale');
+    const liasseMissing = result.missing.find(
+      (m) => m.type === 'liasse_fiscale',
+    );
     expect(liasseMissing?.details).toMatchObject({ provided: 1, required: 2 });
   });
 
   it('reason de missing releve inclut bank + monthsProvided dans details', () => {
     const caseData = makeCase({
-      documents: [liasse('d1', 2023), liasse('d2', 2024), releve('d3', 'LCL', 'FR76L', 10)],
+      documents: [
+        liasse('d1', 2023),
+        liasse('d2', 2024),
+        releve('d3', 'LCL', 'FR76L', 10),
+      ],
     });
     const result = engine.check(caseData);
-    const releveMissing = result.missing.find((m) => m.type === 'releve_bancaire');
+    const releveMissing = result.missing.find(
+      (m) => m.type === 'releve_bancaire',
+    );
     expect(releveMissing?.details).toMatchObject({
       bank: 'LCL',
       monthsProvided: 10,

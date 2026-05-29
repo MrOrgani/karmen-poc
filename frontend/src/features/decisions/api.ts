@@ -1,6 +1,6 @@
-import { post } from '@/shared/lib/http';
+import { post } from "@/shared/lib/http";
 
-export type DecisionType = 'approve' | 'request_docs' | 'reject';
+export type DecisionType = "approve" | "request_docs" | "reject";
 export type DecisionResponse = {
   ok: true;
   decision: DecisionType;
@@ -13,5 +13,9 @@ export function recordDecision(
   decision: DecisionType,
   justification: string,
 ): Promise<DecisionResponse> {
-  return post<DecisionResponse>('/decisions', { caseId, decision, justification });
+  return post<DecisionResponse>("/decisions", {
+    caseId,
+    decision,
+    justification,
+  });
 }

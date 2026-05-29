@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -6,14 +6,14 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/shared/ui/dialog';
-import { Button } from '@/shared/ui/button';
-import { Label } from '@/shared/ui/label';
-import { Skeleton } from '@/shared/ui/skeleton';
-import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert';
-import { AlertCircle, Send, Sparkles } from 'lucide-react';
-import { useDraftFollowUp } from '@/features/follow-ups/hooks/use-draft-follow-up';
-import { track } from '@/shared/lib/track';
+} from "@/shared/ui/dialog";
+import { Button } from "@/shared/ui/button";
+import { Label } from "@/shared/ui/label";
+import { Skeleton } from "@/shared/ui/skeleton";
+import { Alert, AlertDescription, AlertTitle } from "@/shared/ui/alert";
+import { AlertCircle, Send, Sparkles } from "lucide-react";
+import { useDraftFollowUp } from "@/features/follow-ups/hooks/use-draft-follow-up";
+import { track } from "@/shared/lib/track";
 
 type Props = {
   caseId: string;
@@ -23,7 +23,10 @@ type Props = {
 
 export function FollowUpModal({ caseId, open, onOpenChange }: Props) {
   const { data: draft, isPending, error } = useDraftFollowUp(caseId, open);
-  const [form, setForm] = useState<{ subject: string; body: string }>({ subject: '', body: '' });
+  const [form, setForm] = useState<{ subject: string; body: string }>({
+    subject: "",
+    body: "",
+  });
   const [seededDraft, setSeededDraft] = useState<typeof draft>(undefined);
   const [sent, setSent] = useState(false);
   const [lastOpen, setLastOpen] = useState(open);
@@ -34,13 +37,15 @@ export function FollowUpModal({ caseId, open, onOpenChange }: Props) {
   if (draft && draft !== seededDraft) {
     setSeededDraft(draft);
     setForm({ subject: draft.subject, body: draft.body });
-    track('follow-up.draft.generated', caseId, { missingCount: draft.missingDocs.length });
+    track("follow-up.draft.generated", caseId, {
+      missingCount: draft.missingDocs.length,
+    });
   }
 
   if (open !== lastOpen) {
     setLastOpen(open);
     if (open) {
-      track('follow-up.modal.opened', caseId);
+      track("follow-up.modal.opened", caseId);
     } else {
       setSent(false);
       setSeededDraft(undefined);
@@ -53,13 +58,20 @@ export function FollowUpModal({ caseId, open, onOpenChange }: Props) {
     };
   }, []);
 
-  const errorMessage = error ? (error instanceof Error ? error.message : String(error)) : null;
+  const errorMessage = error
+    ? error instanceof Error
+      ? error.message
+      : String(error)
+    : null;
   const loading = isPending && open;
 
   const handleSend = () => {
     if (sent || loading || error) return;
     setSent(true);
-    track('follow-up.sent', caseId, { subject: form.subject, bodyLength: form.body.length });
+    track("follow-up.sent", caseId, {
+      subject: form.subject,
+      bodyLength: form.body.length,
+    });
     closeTimerRef.current = setTimeout(() => {
       onOpenChange(false);
       closeTimerRef.current = null;
@@ -75,7 +87,8 @@ export function FollowUpModal({ caseId, open, onOpenChange }: Props) {
             Follow-up draft
           </DialogTitle>
           <DialogDescription>
-            Email pré-rédigé à partir des pièces manquantes. Éditable avant envoi. (LLM mocké — POC.)
+            Email pré-rédigé à partir des pièces manquantes. Éditable avant
+            envoi. (LLM mocké — POC.)
           </DialogDescription>
         </DialogHeader>
 
@@ -97,7 +110,10 @@ export function FollowUpModal({ caseId, open, onOpenChange }: Props) {
         {!loading && !error && draft && (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="follow-up-subject" className="text-xs uppercase tracking-widest text-karmen-mute font-semibold">
+              <Label
+                htmlFor="follow-up-subject"
+                className="text-xs uppercase tracking-widest text-karmen-mute font-semibold"
+              >
                 Objet
               </Label>
               <input
@@ -105,7 +121,9 @@ export function FollowUpModal({ caseId, open, onOpenChange }: Props) {
                 name="subject"
                 type="text"
                 value={form.subject}
-                onChange={(e) => setForm((f) => ({ ...f, subject: e.target.value }))}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, subject: e.target.value }))
+                }
                 disabled={sent}
                 autoComplete="off"
                 spellCheck
@@ -114,14 +132,19 @@ export function FollowUpModal({ caseId, open, onOpenChange }: Props) {
             </div>
 
             <div>
-              <Label htmlFor="follow-up-body" className="text-xs uppercase tracking-widest text-karmen-mute font-semibold">
+              <Label
+                htmlFor="follow-up-body"
+                className="text-xs uppercase tracking-widest text-karmen-mute font-semibold"
+              >
                 Corps du message
               </Label>
               <textarea
                 id="follow-up-body"
                 name="body"
                 value={form.body}
-                onChange={(e) => setForm((f) => ({ ...f, body: e.target.value }))}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, body: e.target.value }))
+                }
                 disabled={sent}
                 rows={10}
                 autoComplete="off"
@@ -133,7 +156,11 @@ export function FollowUpModal({ caseId, open, onOpenChange }: Props) {
         )}
 
         <DialogFooter className="gap-2 sm:gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={loading}
+          >
             Annuler
           </Button>
           <Button
@@ -142,7 +169,7 @@ export function FollowUpModal({ caseId, open, onOpenChange }: Props) {
             className="bg-karmen-blue hover:bg-karmen-blue-dark text-white"
           >
             <Send aria-hidden className="h-4 w-4 mr-2" />
-            {sent ? 'Sent ✓' : 'Send follow-up'}
+            {sent ? "Sent ✓" : "Send follow-up"}
           </Button>
         </DialogFooter>
       </DialogContent>

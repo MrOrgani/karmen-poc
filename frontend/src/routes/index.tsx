@@ -1,13 +1,15 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { useSuspenseQuery } from '@tanstack/react-query';
-import { getCasesQueryOptions } from '@/features/cases/hooks/query-options';
-import { CaseList } from '@/features/cases/components/case-list';
-import { RoutePending } from '@/shared/components/route-pending';
+/* eslint-disable react-refresh/only-export-components -- TanStack file-based route exports `Route` alongside the component */
+import { createFileRoute } from "@tanstack/react-router";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { getCasesQueryOptions } from "@/features/cases/hooks/query-options";
+import { CaseList } from "@/features/cases/components/case-list";
+import { RoutePending } from "@/shared/components/route-pending";
 
-export const Route = createFileRoute('/')({
+export const Route = createFileRoute("/")({
   component: CasesPage,
   pendingComponent: RoutePending,
-  loader: ({ context }) => context.queryClient.ensureQueryData(getCasesQueryOptions()),
+  loader: ({ context }) =>
+    context.queryClient.ensureQueryData(getCasesQueryOptions()),
 });
 
 function CasesPage() {

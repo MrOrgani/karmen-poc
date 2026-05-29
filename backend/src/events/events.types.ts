@@ -10,7 +10,7 @@ export type EventType =
 
 export type TrackedEvent = {
   ts: number;
-  type: EventType | string;
+  type: EventType | (string & {});
   caseId?: string;
   durationMs?: number;
   payload?: Record<string, unknown>;

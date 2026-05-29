@@ -7,7 +7,7 @@ import {
   useRef,
   useState,
   type ReactNode,
-} from 'react';
+} from "react";
 
 const HIGHLIGHT_DURATION_MS = 1800;
 
@@ -35,7 +35,7 @@ export function RuleHighlightProvider({ children }: { children: ReactNode }) {
     if (codes.length === 0) return;
     setHighlightedCodes(new Set(codes));
     const target = document.getElementById(`rule-${codes[0]}`);
-    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (target) target.scrollIntoView({ behavior: "smooth", block: "center" });
     if (timerRef.current !== null) window.clearTimeout(timerRef.current);
     timerRef.current = window.setTimeout(() => {
       setHighlightedCodes(new Set());
@@ -51,14 +51,17 @@ export function RuleHighlightProvider({ children }: { children: ReactNode }) {
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useHighlight(): (codes: string[]) => void {
   const ctx = useContext(Ctx);
-  if (!ctx) throw new Error('useHighlight requires <RuleHighlightProvider>');
+  if (!ctx) throw new Error("useHighlight requires <RuleHighlightProvider>");
   return ctx.highlight;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useHighlightedCodes(): ReadonlySet<string> {
   const ctx = useContext(Ctx);
-  if (!ctx) throw new Error('useHighlightedCodes requires <RuleHighlightProvider>');
+  if (!ctx)
+    throw new Error("useHighlightedCodes requires <RuleHighlightProvider>");
   return ctx.highlightedCodes;
 }

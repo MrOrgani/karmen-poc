@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
-import { Card } from '@/shared/ui/card';
+import type { ReactNode } from "react";
+import { Card } from "@/shared/ui/card";
 
 type Props = {
   title: string;

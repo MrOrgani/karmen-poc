@@ -1,11 +1,20 @@
-import type { AugmentedCase, FinancialThresholds, MetricStatuses } from '@/shared/types';
-import { SectionCard } from './section-card';
-import { MetricTile } from './metric-tile';
-import { TrendingUp } from 'lucide-react';
-import { formatCurrency, formatDays, formatDelta, NBSP } from '@/shared/lib/format';
+import type {
+  AugmentedCase,
+  FinancialThresholds,
+  MetricStatuses,
+} from "@/shared/types";
+import { SectionCard } from "./section-card";
+import { MetricTile } from "./metric-tile";
+import { TrendingUp } from "lucide-react";
+import {
+  formatCurrency,
+  formatDays,
+  formatDelta,
+  NBSP,
+} from "@/shared/lib/format";
 
 type Props = {
-  fin: AugmentedCase['financialIndicators'];
+  fin: AugmentedCase["financialIndicators"];
   thresholds: FinancialThresholds;
   statuses: MetricStatuses;
 };
@@ -24,15 +33,50 @@ export function FinancialIndicators({ fin, thresholds, statuses }: Props) {
         <MetricTile
           label="CA N"
           value={formatCurrency(fin.revenue)}
-          hint={hasPrev ? `${formatDelta(fin.revenue, fin.revenuePreviousYear)} vs N-1` : 'vs N-1 : liasse 2023 manquante'}
+          hint={
+            hasPrev
+              ? `${formatDelta(fin.revenue, fin.revenuePreviousYear)} vs N-1`
+              : "vs N-1 : liasse 2023 manquante"
+          }
           threshold={thresholds.revenue}
           status={statuses.revenue}
         />
-        <MetricTile label="EBITDA" value={formatCurrency(fin.ebitda)} hint={`${margin.toFixed(1)}${NBSP}% de marge`} threshold={thresholds.ebitda} status={statuses.ebitda} />
-        <MetricTile label="Résultat net" value={formatCurrency(fin.netIncome)} threshold={thresholds.netIncome} status={statuses.netIncome} />
-        <MetricTile label="Dette totale" value={formatCurrency(fin.totalDebt)} hint={debtRatio !== null ? `${debtRatio.toFixed(2)}${NBSP}× EBITDA` : 'EBITDA ≤ 0'} threshold={thresholds.totalDebt} status={statuses.totalDebt} />
-        <MetricTile label="Trésorerie" value={formatCurrency(fin.cashPosition)} threshold={thresholds.cashPosition} status={statuses.cashPosition} />
-        <MetricTile label="DSO" value={formatDays(fin.dso)} threshold={thresholds.dso} status={statuses.dso} />
+        <MetricTile
+          label="EBITDA"
+          value={formatCurrency(fin.ebitda)}
+          hint={`${margin.toFixed(1)}${NBSP}% de marge`}
+          threshold={thresholds.ebitda}
+          status={statuses.ebitda}
+        />
+        <MetricTile
+          label="Résultat net"
+          value={formatCurrency(fin.netIncome)}
+          threshold={thresholds.netIncome}
+          status={statuses.netIncome}
+        />
+        <MetricTile
+          label="Dette totale"
+          value={formatCurrency(fin.totalDebt)}
+          hint={
+            debtRatio !== null
+              ? `${debtRatio.toFixed(2)}${NBSP}× EBITDA`
+              : "EBITDA ≤ 0"
+          }
+          threshold={thresholds.totalDebt}
+          status={statuses.totalDebt}
+        />
+        <MetricTile
+          label="Trésorerie"
+          value={formatCurrency(fin.cashPosition)}
+          threshold={thresholds.cashPosition}
+          status={statuses.cashPosition}
+        />
+        <MetricTile
+          label="DSO"
+          value={formatDays(fin.dso)}
+          threshold={thresholds.dso}
+          status={statuses.dso}
+        />
       </div>
     </SectionCard>
   );

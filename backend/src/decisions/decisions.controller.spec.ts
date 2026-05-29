@@ -11,8 +11,10 @@ function makeRepo(found: boolean): {
   repo: CasesRepository;
   updateStatus: jest.Mock;
 } {
-  const updateStatus = jest.fn(async (_id: string, status: Status) =>
-    found ? ({ financing_request: { status } } as AugmentedCase) : null,
+  const updateStatus = jest.fn((_id: string, status: Status) =>
+    Promise.resolve(
+      found ? ({ financing_request: { status } } as AugmentedCase) : null,
+    ),
   );
   return {
     repo: { updateStatus } as unknown as CasesRepository,

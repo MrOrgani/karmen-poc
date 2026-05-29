@@ -1,5 +1,9 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { recordDecision, type DecisionResponse, type DecisionType } from '../api';
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  recordDecision,
+  type DecisionResponse,
+  type DecisionType,
+} from "../api";
 
 export function useRecordDecision(caseId: string) {
   const queryClient = useQueryClient();
@@ -12,8 +16,8 @@ export function useRecordDecision(caseId: string) {
       recordDecision(caseId, decision, justification),
     // Le statut du case est muté côté serveur, donc cockpit ET liste doivent refetch.
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['cases', caseId] });
-      void queryClient.invalidateQueries({ queryKey: ['cases'] });
+      void queryClient.invalidateQueries({ queryKey: ["cases", caseId] });
+      void queryClient.invalidateQueries({ queryKey: ["cases"] });
     },
   });
 }

@@ -417,7 +417,8 @@ const RULES: RuleDefinition[] = [
         };
       }
       const pct = factoring.topClientConcentrationPct;
-      const status: MetricStatus = pct < 20 ? 'ok' : pct <= 30 ? 'warn' : 'alert';
+      const status: MetricStatus =
+        pct < 20 ? 'ok' : pct <= 30 ? 'warn' : 'alert';
       return { status, value: fmtPct(pct, 0) };
     },
     toRedFlags: (e, { factoring }) => {
@@ -452,7 +453,8 @@ const RULES: RuleDefinition[] = [
         };
       }
       const pct = factoring.agedReceivablesPct;
-      const status: MetricStatus = pct < 10 ? 'ok' : pct <= 20 ? 'warn' : 'alert';
+      const status: MetricStatus =
+        pct < 10 ? 'ok' : pct <= 20 ? 'warn' : 'alert';
       return { status, value: fmtPct(pct, 0) };
     },
     toRedFlags: (e, { factoring }) => {
@@ -511,7 +513,10 @@ const RULES: RuleDefinition[] = [
  * Phrase positive par thème — utilisée quand aucun flag de ce thème n'est levé.
  * Couplée au tag `theme` porté par chaque rule.
  */
-export const THEMES: Record<Theme, { whenAllGreen: (input: RuleInput) => string }> = {
+export const THEMES: Record<
+  Theme,
+  { whenAllGreen: (input: RuleInput) => string }
+> = {
   profitability: {
     whenAllGreen: ({ fin }) => {
       const margin = fin.revenue > 0 ? (fin.ebitda / fin.revenue) * 100 : 0;
@@ -611,7 +616,8 @@ export class RuleEngine {
     const evaluations = this.evaluateAll(input);
     // En prêt, on n'expose pas les tuiles factoring (sinon ce serait 3 tuiles "non applicable" sur tous les dossiers prêt).
     const applicable = RULES.filter(
-      (rule) => rule.category !== 'factoring' || input.financingType === 'factoring',
+      (rule) =>
+        rule.category !== 'factoring' || input.financingType === 'factoring',
     );
     return applicable.map((rule) => {
       const e = evaluations.get(rule.code)!;

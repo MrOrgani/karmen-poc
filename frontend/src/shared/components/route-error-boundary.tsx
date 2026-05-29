@@ -1,8 +1,8 @@
-import { Link } from '@tanstack/react-router';
-import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert';
-import { Button } from '@/shared/ui/button';
-import { AlertCircle, ArrowLeft, RefreshCcw } from 'lucide-react';
-import { ApiError } from '@/shared/lib/http';
+import { Link } from "@tanstack/react-router";
+import { Alert, AlertDescription, AlertTitle } from "@/shared/ui/alert";
+import { Button } from "@/shared/ui/button";
+import { AlertCircle, ArrowLeft, RefreshCcw } from "lucide-react";
+import { ApiError } from "@/shared/lib/http";
 
 type ErrorComponentProps = { error: unknown; reset?: () => void };
 
@@ -13,7 +13,9 @@ export function RouteErrorBoundary({ error, reset }: ErrorComponentProps) {
   return (
     <Alert variant="destructive" aria-live="polite">
       <AlertCircle aria-hidden className="h-4 w-4" />
-      <AlertTitle>{isApiError ? 'Erreur API' : 'Erreur de chargement'}</AlertTitle>
+      <AlertTitle>
+        {isApiError ? "Erreur API" : "Erreur de chargement"}
+      </AlertTitle>
       <AlertDescription className="space-y-2">
         <p>{message}</p>
         <div className="flex gap-2">

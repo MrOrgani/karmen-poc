@@ -9,7 +9,9 @@ import type {
 @Injectable()
 export class CompletenessEngine {
   check(caseData: AugmentedCase): CompletenessResult {
-    const requirements = documentRequirementsFor(caseData.financing_request.type);
+    const requirements = documentRequirementsFor(
+      caseData.financing_request.type,
+    );
     const missing: MissingItem[] = [];
 
     const liasses = caseData.documents.filter(
@@ -31,7 +33,8 @@ export class CompletenessEngine {
     );
     const byAccount = new Map<string, typeof releves>();
     for (const doc of releves) {
-      const account = doc.metadata.account ?? `__noaccount_${doc.metadata.bank ?? 'unknown'}`;
+      const account =
+        doc.metadata.account ?? `__noaccount_${doc.metadata.bank ?? 'unknown'}`;
       const list = byAccount.get(account) ?? [];
       list.push(doc);
       byAccount.set(account, list);

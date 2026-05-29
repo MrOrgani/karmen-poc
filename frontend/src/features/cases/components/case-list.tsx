@@ -1,41 +1,41 @@
-import { useEffect, useRef } from 'react';
-import { Link } from '@tanstack/react-router';
+import { useEffect, useRef } from "react";
+import { Link } from "@tanstack/react-router";
 import {
   ArrowUpRight,
   Banknote,
   CheckCircle2,
   FileWarning,
   Landmark,
-} from 'lucide-react';
-import { Card, CardContent } from '@/shared/ui/card';
-import { cn } from '@/shared/lib/utils';
-import { formatCurrency } from '@/shared/lib/format';
-import { track } from '@/shared/lib/track';
-import type { CaseSummary, FinancingType, RiskBucket } from '@/shared/types';
+} from "lucide-react";
+import { Card, CardContent } from "@/shared/ui/card";
+import { cn } from "@/shared/lib/utils";
+import { formatCurrency } from "@/shared/lib/format";
+import { track } from "@/shared/lib/track";
+import type { CaseSummary, FinancingType, RiskBucket } from "@/shared/types";
 
 type Props = { cases: CaseSummary[] };
 
 const RISK_LABEL: Record<RiskBucket, string> = {
-  low: 'Risque faible',
-  medium: 'Risque modéré',
-  high: 'Risque élevé',
+  low: "Risque faible",
+  medium: "Risque modéré",
+  high: "Risque élevé",
 };
 
 const RISK_DOT: Record<RiskBucket, string> = {
-  low: 'bg-emerald-500',
-  medium: 'bg-amber-500',
-  high: 'bg-destructive',
+  low: "bg-emerald-500",
+  medium: "bg-amber-500",
+  high: "bg-destructive",
 };
 
 const SCORE_TONE: Record<RiskBucket, string> = {
-  low: 'text-emerald-600',
-  medium: 'text-amber-600',
-  high: 'text-destructive',
+  low: "text-emerald-600",
+  medium: "text-amber-600",
+  high: "text-destructive",
 };
 
 const TYPE_LABEL: Record<FinancingType, string> = {
-  loan: 'Prêt',
-  factoring: 'Affacturage',
+  loan: "Prêt",
+  factoring: "Affacturage",
 };
 
 const TYPE_ICON: Record<FinancingType, typeof Banknote> = {
@@ -48,7 +48,7 @@ export function CaseList({ cases }: Props) {
   useEffect(() => {
     if (cases && !viewedRef.current) {
       viewedRef.current = true;
-      track('cases.list.viewed', undefined, { count: cases.length });
+      track("cases.list.viewed", undefined, { count: cases.length });
     }
   }, [cases]);
 
@@ -66,10 +66,10 @@ export function CaseList({ cases }: Props) {
           >
             <Card
               className={cn(
-                'group relative h-full overflow-hidden bg-white border-karmen-border-blue/60',
-                'hover:border-karmen-blue hover:shadow-[0_8px_28px_-12px_rgba(27,95,255,0.25)] hover:-translate-y-0.5',
-                'transition-[border-color,box-shadow,transform] duration-200 ease-out',
-                'motion-reduce:transform-none motion-reduce:transition-none',
+                "group relative h-full overflow-hidden bg-white border-karmen-border-blue/60",
+                "hover:border-karmen-blue hover:shadow-[0_8px_28px_-12px_rgba(27,95,255,0.25)] hover:-translate-y-0.5",
+                "transition-[border-color,box-shadow,transform] duration-200 ease-out",
+                "motion-reduce:transform-none motion-reduce:transition-none",
               )}
             >
               <CardContent className="p-5 flex flex-col gap-4 h-full">
@@ -86,11 +86,11 @@ export function CaseList({ cases }: Props) {
                   <span
                     aria-hidden
                     className={cn(
-                      'inline-flex items-center justify-center h-7 w-7 rounded-full shrink-0',
-                      'bg-karmen-pale-blue text-karmen-blue',
-                      'group-hover:bg-karmen-blue group-hover:text-white',
-                      'transition-[background-color,color,transform] duration-200',
-                      'group-hover:translate-x-0.5 motion-reduce:group-hover:translate-x-0',
+                      "inline-flex items-center justify-center h-7 w-7 rounded-full shrink-0",
+                      "bg-karmen-pale-blue text-karmen-blue",
+                      "group-hover:bg-karmen-blue group-hover:text-white",
+                      "transition-[background-color,color,transform] duration-200",
+                      "group-hover:translate-x-0.5 motion-reduce:group-hover:translate-x-0",
                     )}
                   >
                     <ArrowUpRight className="h-4 w-4" />
@@ -117,7 +117,7 @@ export function CaseList({ cases }: Props) {
                       <span
                         aria-hidden
                         className={cn(
-                          'h-1.5 w-1.5 rounded-full shrink-0',
+                          "h-1.5 w-1.5 rounded-full shrink-0",
                           RISK_DOT[row.riskBucket],
                         )}
                       />
@@ -127,8 +127,8 @@ export function CaseList({ cases }: Props) {
                     </span>
                     <span
                       className={cn(
-                        'inline-flex items-center gap-1.5 min-w-0',
-                        isComplete ? 'text-karmen-mute' : 'text-destructive',
+                        "inline-flex items-center gap-1.5 min-w-0",
+                        isComplete ? "text-karmen-mute" : "text-destructive",
                       )}
                     >
                       {isComplete ? (
@@ -144,8 +144,8 @@ export function CaseList({ cases }: Props) {
                       )}
                       <span className="truncate">
                         {isComplete
-                          ? 'Documents complets'
-                          : 'Documents manquants'}
+                          ? "Documents complets"
+                          : "Documents manquants"}
                       </span>
                     </span>
                   </div>
@@ -153,7 +153,7 @@ export function CaseList({ cases }: Props) {
                   <div className="flex items-baseline gap-1 shrink-0">
                     <span
                       className={cn(
-                        'text-lg font-semibold tabular-nums leading-none',
+                        "text-lg font-semibold tabular-nums leading-none",
                         SCORE_TONE[row.riskBucket],
                       )}
                     >

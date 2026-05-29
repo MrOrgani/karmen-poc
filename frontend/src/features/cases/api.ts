@@ -1,8 +1,8 @@
-import type { CaseCockpit, CaseSummary } from '@/shared/types';
-import { get } from '@/shared/lib/http';
+import type { CaseCockpit, CaseSummary } from "@/shared/types";
+import { get } from "@/shared/lib/http";
 
 export function fetchCases(): Promise<CaseSummary[]> {
-  return get<CaseSummary[]>('/cases');
+  return get<CaseSummary[]>("/cases");
 }
 
 export function fetchCase(id: string): Promise<CaseCockpit> {

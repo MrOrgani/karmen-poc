@@ -1,12 +1,17 @@
-import { formatCurrency, NBSP } from '@/shared/lib/format';
-import type { AugmentedCase, DataCoverage, FinancialThresholds, MetricStatuses } from '@/shared/types';
-import { cn } from '@/shared/lib/utils';
-import { AlertTriangle, Landmark } from 'lucide-react';
-import { MetricTile } from './metric-tile';
-import { SectionCard } from './section-card';
+import { formatCurrency, NBSP } from "@/shared/lib/format";
+import type {
+  AugmentedCase,
+  DataCoverage,
+  FinancialThresholds,
+  MetricStatuses,
+} from "@/shared/types";
+import { cn } from "@/shared/lib/utils";
+import { AlertTriangle, Landmark } from "lucide-react";
+import { MetricTile } from "./metric-tile";
+import { SectionCard } from "./section-card";
 
 type Props = {
-  bank: AugmentedCase['bankFlows'];
+  bank: AugmentedCase["bankFlows"];
   thresholds: FinancialThresholds;
   statuses: MetricStatuses;
   coverage: DataCoverage;
@@ -27,16 +32,44 @@ export function BankFlowsCard({ bank, thresholds, statuses, coverage }: Props) {
         >
           <AlertTriangle aria-hidden className="h-3.5 w-3.5 mt-0.5 shrink-0" />
           <span>
-            <span className="font-medium">Couverture {coverage.bankMonthsCovered}/12 mois</span> — chiffres extrapolés,
-            fiabilité réduite. Demander les relevés complémentaires pour fiabiliser.
+            <span className="font-medium">
+              Couverture {coverage.bankMonthsCovered}/12 mois
+            </span>{" "}
+            — chiffres extrapolés, fiabilité réduite. Demander les relevés
+            complémentaires pour fiabiliser.
           </span>
         </div>
       )}
-      <div className={cn('grid grid-cols-1 sm:grid-cols-2 gap-3', partial && 'opacity-60')}>
-        <MetricTile label="Entrées moyennes" value={`${formatCurrency(bank.monthlyInflowsAverage)}${NBSP}/${NBSP}mois`} threshold={thresholds.monthlyInflowsAverage} status={statuses.monthlyInflowsAverage} />
-        <MetricTile label="Sorties moyennes" value={`${formatCurrency(bank.monthlyOutflowsAverage)}${NBSP}/${NBSP}mois`} threshold={thresholds.monthlyOutflowsAverage} status={statuses.monthlyOutflowsAverage} />
-        <MetricTile label="Jours de découvert" value={`${bank.overdraftDaysLast12m}${NBSP}j${NBSP}/${NBSP}12${NBSP}mois`} threshold={thresholds.overdraftDaysLast12m} status={statuses.overdraftDaysLast12m} />
-        <MetricTile label="Rejets de paiement" value={`${bank.rejectedPaymentsCount}`} threshold={thresholds.rejectedPaymentsCount} status={statuses.rejectedPaymentsCount} />
+      <div
+        className={cn(
+          "grid grid-cols-1 sm:grid-cols-2 gap-3",
+          partial && "opacity-60",
+        )}
+      >
+        <MetricTile
+          label="Entrées moyennes"
+          value={`${formatCurrency(bank.monthlyInflowsAverage)}${NBSP}/${NBSP}mois`}
+          threshold={thresholds.monthlyInflowsAverage}
+          status={statuses.monthlyInflowsAverage}
+        />
+        <MetricTile
+          label="Sorties moyennes"
+          value={`${formatCurrency(bank.monthlyOutflowsAverage)}${NBSP}/${NBSP}mois`}
+          threshold={thresholds.monthlyOutflowsAverage}
+          status={statuses.monthlyOutflowsAverage}
+        />
+        <MetricTile
+          label="Jours de découvert"
+          value={`${bank.overdraftDaysLast12m}${NBSP}j${NBSP}/${NBSP}12${NBSP}mois`}
+          threshold={thresholds.overdraftDaysLast12m}
+          status={statuses.overdraftDaysLast12m}
+        />
+        <MetricTile
+          label="Rejets de paiement"
+          value={`${bank.rejectedPaymentsCount}`}
+          threshold={thresholds.rejectedPaymentsCount}
+          status={statuses.rejectedPaymentsCount}
+        />
       </div>
     </SectionCard>
   );

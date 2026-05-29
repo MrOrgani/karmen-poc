@@ -1,11 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { CasesRepository } from './cases.repository';
 import { CompletenessEngine } from '../completeness/completeness.engine';
 import { RuleEngine } from '../rule-engine/rule-engine';
 import { ScoreExplainer } from '../score/score.explainer';
-import type { CaseCockpit } from './types';
+import { CasesRepository } from './cases.repository';
 import { computeDataCoverage } from './data-coverage';
 import { normalizeFinancialIndicators } from './normalize-financial-indicators';
+import type { CaseCockpit } from './types';
 
 @Injectable()
 export class CockpitAggregator {

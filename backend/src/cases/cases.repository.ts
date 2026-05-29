@@ -23,22 +23,24 @@ export class CasesRepository implements OnModuleInit {
     );
   }
 
-  async list(): Promise<AugmentedCase[]> {
-    return [...this.cases];
+  list(): Promise<AugmentedCase[]> {
+    return Promise.resolve([...this.cases]);
   }
 
-  async findById(id: string): Promise<AugmentedCase | null> {
-    return this.cases.find((c) => c.financing_request.id === id) ?? null;
+  findById(id: string): Promise<AugmentedCase | null> {
+    return Promise.resolve(
+      this.cases.find((c) => c.financing_request.id === id) ?? null,
+    );
   }
 
-  async updateStatus(
+  updateStatus(
     id: string,
     status: AugmentedCase['financing_request']['status'],
   ): Promise<AugmentedCase | null> {
     const caseData = this.cases.find((c) => c.financing_request.id === id);
-    if (!caseData) return null;
+    if (!caseData) return Promise.resolve(null);
     caseData.financing_request.status = status;
-    return caseData;
+    return Promise.resolve(caseData);
   }
 
   private resolveDataDir(): string {

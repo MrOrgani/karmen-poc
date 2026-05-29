@@ -1,6 +1,14 @@
-import { createRootRouteWithContext, Link, Outlet } from '@tanstack/react-router';
-import type { QueryClient } from '@tanstack/react-query';
-import { RouteErrorBoundary, RouteNotFound } from '@/shared/components/route-error-boundary';
+/* eslint-disable react-refresh/only-export-components -- TanStack file-based route exports `Route` alongside the component */
+import {
+  createRootRouteWithContext,
+  Link,
+  Outlet,
+} from "@tanstack/react-router";
+import type { QueryClient } from "@tanstack/react-query";
+import {
+  RouteErrorBoundary,
+  RouteNotFound,
+} from "@/shared/components/route-error-boundary";
 
 export type RouterContext = { queryClient: QueryClient };
 
@@ -15,8 +23,13 @@ function RootLayout() {
       </a>
       <header className="bg-karmen-blue text-white">
         <div className="max-w-5xl mx-auto px-4 py-3.5 flex items-center justify-between">
-          <Link to="/" className="inline-flex items-baseline gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60 rounded-sm">
-            <span className="text-white font-bold tracking-tight text-xl">KARMEN</span>
+          <Link
+            to="/"
+            className="inline-flex items-baseline gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60 rounded-sm"
+          >
+            <span className="text-white font-bold tracking-tight text-xl">
+              KARMEN
+            </span>
           </Link>
         </div>
       </header>
