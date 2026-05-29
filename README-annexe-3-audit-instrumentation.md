@@ -55,6 +55,33 @@ L'audit ne se résume pas à « calculable / pas calculable » : il y a **trois 
 
 ---
 
+## 3bis. Mode opératoire : calculer le temps par dossier
+
+Le POC ne sert pas un temps tout fait — il sert la **matière première horodatée**. Reconstitution en post-traitement à partir de `GET /api/events` (tableau de `{ ts, type, caseId, … }`).
+
+**Principe.** Par `caseId` : borne de début = `case.opened.ts`, borne de fin = `MIN(decision.made.ts)` (règle de collapse, §4.1). Durée = fin − début. Agrégat métier = **médiane** sur les dossiers (pas la moyenne : distribution bimodale, README §1).
+
+```bash
+curl -s localhost:3000/api/events | jq '
+  [.[] | select(.caseId)] | group_by(.caseId)
+  | map({ caseId: .[0].caseId,
+          o: ([.[]|select(.type=="case.opened").ts]|min),
+          d: ([.[]|select(.type=="decision.made").ts]|min) }
+        | select(.o and .d) | {caseId, minutes: ((.d-.o)/60000)})'
+```
+
+**Ce que ce chiffre est** : un wall-clock _première-ouverture → première-décision_. **Ce qu'il n'est pas**, et qui doit être dit explicitement :
+
+| Limite                                                         | Conséquence                                                        |
+| -------------------------------------------------------------- | ------------------------------------------------------------------ |
+| Pas de temps _actif_ (aucun event focus/blur/heartbeat — §4.3) | Un dossier laissé ouvert gonfle la durée                           |
+| Aucune identité analyste dans les events                       | « par analyste » et split junior/senior **impossibles à ce stade** |
+| n = 1 en démo                                                  | Mesure statistiquement nulle — prouve le _pipeline_, pas le gain   |
+
+**Pour passer de « calculable » à « mesure analyste fiable »** (ordre = cycle mesure, README §6) : (1) ajouter un `sessionId`/`analystId` sur chaque event → débloque le « par analyste » ; (2) events focus/blur → temps actif ; (3) persistance Postgres → agrégat multi-session ; (4) baseline « avant » (interviews + chronométrage, README §2a) pour avoir un point de comparaison.
+
+---
+
 ## 4. Décisions de soundness & dettes documentées (non construites)
 
 Choix assumés, **pas** des oublis. Construire ces items maintenant contredirait soit la roadmap (out-of-scope), soit le timebox POC.
@@ -73,9 +100,10 @@ Choix assumés, **pas** des oublis. Construire ces items maintenant contredirait
 
 ## 5. Journal des corrections appliquées dans cet audit
 
-| #   | Défaut                                                                    | Type                            | Correction                                                                   |
-| --- | ------------------------------------------------------------------------- | ------------------------------- | ---------------------------------------------------------------------------- |
-| 1   | `cases.list.viewed` (front) ≠ `case.list.viewed` (back)                   | Correctness (drift)             | Front aligné sur `case.list.viewed` (`track.ts`, `case-list.tsx`)            |
-| 2   | `decision.made` annoncé côté front sans être émis par le front            | Correctness (taxonomie honnête) | Annoté `server-side only` dans `track.ts` (idem `http.request`)              |
-| 3   | `cockpit.section.expanded` vestigial + métrique « modules ouverts » morte | Pertinence                      | Event supprimé (front + back + `track()`), README §2/§3/§5 corrigés          |
-| 4   | `decision.made` doublonnable                                              | Sémantique                      | Append-only assumé + règle de collapse `MIN(ts)` documentée (ci-dessus §4.1) |
+| #   | Défaut                                                                                                                                                                   | Type                            | Correction                                                                                                                                                                               |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `cases.list.viewed` (front) ≠ `case.list.viewed` (back)                                                                                                                  | Correctness (drift)             | Front aligné sur `case.list.viewed` (`track.ts`, `case-list.tsx`)                                                                                                                        |
+| 2   | `decision.made` annoncé côté front sans être émis par le front                                                                                                           | Correctness (taxonomie honnête) | Annoté `server-side only` dans `track.ts` (idem `http.request`)                                                                                                                          |
+| 3   | `cockpit.section.expanded` vestigial + métrique « modules ouverts » morte                                                                                                | Pertinence                      | Event supprimé (front + back + `track()`), README §2/§3/§5 corrigés                                                                                                                      |
+| 4   | `decision.made` doublonnable                                                                                                                                             | Sémantique                      | Append-only assumé + règle de collapse `MIN(ts)` documentée (ci-dessus §4.1)                                                                                                             |
+| 5   | `sendBeacon` droppait silencieusement les events front (Blob `application/json` non CORS-safelisted : `true` = « mis en file » ≠ livré, fallback `fetch` jamais atteint) | Correctness (livraison)         | `sendBeacon` supprimé, `fetch` keepalive en chemin unique (`track.ts`). Démasqué par test live ; `temps cockpit→décision` était incalculable sans ça (borne `case.opened` jamais livrée) |

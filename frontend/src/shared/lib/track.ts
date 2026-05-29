@@ -29,17 +29,10 @@ export function track(
   if (import.meta.env.DEV) {
     console.log("📊 [track]", event);
   }
-  // Use sendBeacon when available (queued, non-blocking, survives page unload).
-  if (typeof navigator !== "undefined" && "sendBeacon" in navigator) {
-    try {
-      const blob = new Blob([JSON.stringify(event)], {
-        type: "application/json",
-      });
-      if (navigator.sendBeacon("/api/events", blob)) return;
-    } catch {
-      // fall through to fetch
-    }
-  }
+  // fetch + keepalive: reliable delivery that also survives page unload.
+  // sendBeacon was dropped on purpose — with an `application/json` Blob it
+  // returns true ("queued") but Chrome silently drops the non-CORS-safelisted
+  // body, and the early return then skipped any fallback → events lost.
   fetch("/api/events", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
