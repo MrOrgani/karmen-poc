@@ -35,10 +35,10 @@ export class CasesRepository implements OnModuleInit {
     id: string,
     status: AugmentedCase['financing_request']['status'],
   ): Promise<AugmentedCase | null> {
-    const case_ = this.cases.find((c) => c.financing_request.id === id);
-    if (!case_) return null;
-    case_.financing_request.status = status;
-    return case_;
+    const caseData = this.cases.find((c) => c.financing_request.id === id);
+    if (!caseData) return null;
+    caseData.financing_request.status = status;
+    return caseData;
   }
 
   private resolveDataDir(): string {

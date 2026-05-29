@@ -23,22 +23,22 @@ export class CockpitAggregator {
     }
 
     const dataCoverage = computeDataCoverage(raw);
-    const case_ = normalizeFinancialIndicators(raw, dataCoverage);
+    const caseData = normalizeFinancialIndicators(raw, dataCoverage);
 
-    const completeness = this.completeness.check(case_);
+    const completeness = this.completeness.check(caseData);
     const input = {
-      fin: case_.financialIndicators,
-      bank: case_.bankFlows,
-      financingType: case_.financing_request.type,
-      factoring: case_.factoringIndicators,
+      fin: caseData.financialIndicators,
+      bank: caseData.bankFlows,
+      financingType: caseData.financing_request.type,
+      factoring: caseData.factoringIndicators,
     };
     const redFlags = this.rules.redFlags(input);
     const metricStatuses = this.rules.metricStatuses(input);
     const rulesDiagnostic = this.rules.diagnostic(input);
-    const scoreExplanation = this.scoreExplainer.explain(case_, redFlags);
+    const scoreExplanation = this.scoreExplainer.explain(caseData, redFlags);
 
     return {
-      caseData: case_,
+      caseData,
       completeness,
       redFlags,
       scoreExplanation,

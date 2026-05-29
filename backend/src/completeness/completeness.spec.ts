@@ -54,19 +54,19 @@ describe('CompletenessEngine', () => {
   const engine = new CompletenessEngine();
 
   it('Brasserie-like — 2 liasses + 12 mois → 100% complet', () => {
-    const case_ = makeCase({
+    const caseData = makeCase({
       documents: [liasse('d1', 2023), liasse('d2', 2024), releve('d3', 'Crédit Agricole', 'FR76A', 12)],
     });
-    const result = engine.check(case_);
+    const result = engine.check(caseData);
     expect(result.isComplete).toBe(true);
     expect(result.missing).toHaveLength(0);
   });
 
   it('Studio Pixel-like — 1 liasse seulement → missing liasse_fiscale 1/2', () => {
-    const case_ = makeCase({
+    const caseData = makeCase({
       documents: [liasse('d1', 2024), releve('d2', 'BNP Paribas', 'FR76B', 6)],
     });
-    const result = engine.check(case_);
+    const result = engine.check(caseData);
     expect(result.isComplete).toBe(false);
     const liasseMissing = result.missing.find((m) => m.type === 'liasse_fiscale');
     expect(liasseMissing).toBeDefined();
@@ -74,11 +74,11 @@ describe('CompletenessEngine', () => {
   });
 
   it('Fleurs-like — LCL avec 10 mois → missing releve_bancaire mentionne 10 et LCL', () => {
-    const case_ = makeCase({
+    const caseData = makeCase({
       type: 'factoring',
       documents: [liasse('d1', 2023), liasse('d2', 2024), releve('d3', 'LCL', 'FR76L', 10)],
     });
-    const result = engine.check(case_);
+    const result = engine.check(caseData);
     expect(result.isComplete).toBe(false);
     const releveMissing = result.missing.find((m) => m.type === 'releve_bancaire');
     expect(releveMissing).toBeDefined();
@@ -87,8 +87,8 @@ describe('CompletenessEngine', () => {
   });
 
   it('aucun relevé bancaire fourni → missing item explicite, isComplete false', () => {
-    const case_ = makeCase({ documents: [liasse('d1', 2023), liasse('d2', 2024)] });
-    const result = engine.check(case_);
+    const caseData = makeCase({ documents: [liasse('d1', 2023), liasse('d2', 2024)] });
+    const result = engine.check(caseData);
     expect(result.isComplete).toBe(false);
     const missing = result.missing.find((m) => m.type === 'releve_bancaire');
     expect(missing).toBeDefined();
@@ -96,67 +96,67 @@ describe('CompletenessEngine', () => {
   });
 
   it('même compte avec 2 docs (6 + 6 mois) → 12 mois total, isComplete true', () => {
-    const case_ = makeCase({
+    const caseData = makeCase({
       documents: [
         liasse('d1', 2023), liasse('d2', 2024),
         releve('d3', 'BNP Paribas', 'FR76SAME', 6),
         releve('d4', 'BNP Paribas', 'FR76SAME', 6),
       ],
     });
-    const result = engine.check(case_);
+    const result = engine.check(caseData);
     expect(result.isComplete).toBe(true);
   });
 
   it('Transport Leclerc-like — 2 comptes (SG + BNP) × 12 mois → checks indépendants, complet', () => {
-    const case_ = makeCase({
+    const caseData = makeCase({
       documents: [
         liasse('d1', 2023), liasse('d2', 2024),
         releve('d3', 'Société Générale', 'FR76SG', 12),
         releve('d4', 'BNP Paribas', 'FR76BNP', 12),
       ],
     });
-    const result = engine.check(case_);
+    const result = engine.check(caseData);
     expect(result.isComplete).toBe(true);
   });
 
   // ─── Edge cases ──────────────────────────────────────────
 
   it('0 relevé + 2 liasses → missing relevé bancaire, isComplete false', () => {
-    const case_ = makeCase({ documents: [liasse('d1', 2023), liasse('d2', 2024)] });
-    const result = engine.check(case_);
+    const caseData = makeCase({ documents: [liasse('d1', 2023), liasse('d2', 2024)] });
+    const result = engine.check(caseData);
     expect(result.isComplete).toBe(false);
     expect(result.missing.find((m) => m.type === 'releve_bancaire')).toBeDefined();
   });
 
   it('0 document du tout → missing items pour liasse ET relevé', () => {
-    const case_ = makeCase({ documents: [] });
-    const result = engine.check(case_);
+    const caseData = makeCase({ documents: [] });
+    const result = engine.check(caseData);
     expect(result.isComplete).toBe(false);
     expect(result.missing.find((m) => m.type === 'liasse_fiscale')).toBeDefined();
     expect(result.missing.find((m) => m.type === 'releve_bancaire')).toBeDefined();
   });
 
   it('relevés sans account, même banque → 1 seul bucket (somme des mois)', () => {
-    const case_ = makeCase({
+    const caseData = makeCase({
       documents: [
         liasse('d1', 2023), liasse('d2', 2024),
         releveNoAccount('d3', 'BNP Paribas', 6),
         releveNoAccount('d4', 'BNP Paribas', 6),
       ],
     });
-    const result = engine.check(case_);
+    const result = engine.check(caseData);
     expect(result.isComplete).toBe(true);
   });
 
   it('relevés sans account, banques différentes → buckets distincts', () => {
-    const case_ = makeCase({
+    const caseData = makeCase({
       documents: [
         liasse('d1', 2023), liasse('d2', 2024),
         releveNoAccount('d3', 'BNP Paribas', 12),
         releveNoAccount('d4', 'LCL', 8),
       ],
     });
-    const result = engine.check(case_);
+    const result = engine.check(caseData);
     expect(result.isComplete).toBe(false);
     const missing = result.missing.find((m) => m.type === 'releve_bancaire');
     expect(missing).toBeDefined();
@@ -165,18 +165,18 @@ describe('CompletenessEngine', () => {
   });
 
   it('months_covered exactement = 12 (boundary) → considéré complet', () => {
-    const case_ = makeCase({
+    const caseData = makeCase({
       documents: [liasse('d1', 2023), liasse('d2', 2024), releve('d3', 'BNP', 'FR76X', 12)],
     });
-    const result = engine.check(case_);
+    const result = engine.check(caseData);
     expect(result.isComplete).toBe(true);
   });
 
   it('months_covered = 11 (juste sous le seuil) → missing', () => {
-    const case_ = makeCase({
+    const caseData = makeCase({
       documents: [liasse('d1', 2023), liasse('d2', 2024), releve('d3', 'BNP', 'FR76X', 11)],
     });
-    const result = engine.check(case_);
+    const result = engine.check(caseData);
     expect(result.isComplete).toBe(false);
     const missing = result.missing.find((m) => m.type === 'releve_bancaire');
     expect(missing?.reason).toContain('11');
@@ -198,30 +198,30 @@ describe('CompletenessEngine', () => {
   });
 
   it('multiples comptes tous incomplets → missing items multiples', () => {
-    const case_ = makeCase({
+    const caseData = makeCase({
       documents: [
         releve('d1', 'BNP', 'FR76A', 3),
         releve('d2', 'LCL', 'FR76B', 5),
         releve('d3', 'SG', 'FR76C', 7),
       ],
     });
-    const result = engine.check(case_);
+    const result = engine.check(caseData);
     expect(result.isComplete).toBe(false);
     expect(result.missing.length).toBeGreaterThanOrEqual(4); // liasse + 3 comptes incomplets
   });
 
   it('reason de missing liasse inclut le détail dans details', () => {
-    const case_ = makeCase({ documents: [liasse('d1', 2024)] });
-    const result = engine.check(case_);
+    const caseData = makeCase({ documents: [liasse('d1', 2024)] });
+    const result = engine.check(caseData);
     const liasseMissing = result.missing.find((m) => m.type === 'liasse_fiscale');
     expect(liasseMissing?.details).toMatchObject({ provided: 1, required: 2 });
   });
 
   it('reason de missing releve inclut bank + monthsProvided dans details', () => {
-    const case_ = makeCase({
+    const caseData = makeCase({
       documents: [liasse('d1', 2023), liasse('d2', 2024), releve('d3', 'LCL', 'FR76L', 10)],
     });
-    const result = engine.check(case_);
+    const result = engine.check(caseData);
     const releveMissing = result.missing.find((m) => m.type === 'releve_bancaire');
     expect(releveMissing?.details).toMatchObject({
       bank: 'LCL',

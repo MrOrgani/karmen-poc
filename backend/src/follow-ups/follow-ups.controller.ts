@@ -11,8 +11,8 @@ export class FollowUpsController {
 
   @Post()
   async draft(@Param('id') id: string): Promise<FollowUpDraft> {
-    const case_ = await this.repository.findById(id);
-    if (!case_) throw new NotFoundException(`Case "${id}" not found`);
-    return this.followUps.draftForCase(case_);
+    const caseData = await this.repository.findById(id);
+    if (!caseData) throw new NotFoundException(`Case "${id}" not found`);
+    return this.followUps.draftForCase(caseData);
   }
 }

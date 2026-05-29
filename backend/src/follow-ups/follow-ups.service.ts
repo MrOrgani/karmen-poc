@@ -18,9 +18,9 @@ export class FollowUpsService {
    * pour que l'invariant "un follow-up reflète l'état documentaire actuel" reste local.
    * Branchement LLM réel (Claude/OpenAI) à activer en prod via env var.
    */
-  draftForCase(case_: AugmentedCase): FollowUpDraft {
-    const missing = this.completeness.check(case_).missing;
-    const { company, financing_request: req } = case_;
+  draftForCase(caseData: AugmentedCase): FollowUpDraft {
+    const missing = this.completeness.check(caseData).missing;
+    const { company, financing_request: req } = caseData;
     const missingDocs = missing.map((m) => m.reason);
 
     const subject = `Karmen — Pièces complémentaires pour votre dossier de financement`;

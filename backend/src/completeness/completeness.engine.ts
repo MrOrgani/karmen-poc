@@ -8,11 +8,11 @@ import type {
 
 @Injectable()
 export class CompletenessEngine {
-  check(case_: AugmentedCase): CompletenessResult {
-    const requirements = documentRequirementsFor(case_.financing_request.type);
+  check(caseData: AugmentedCase): CompletenessResult {
+    const requirements = documentRequirementsFor(caseData.financing_request.type);
     const missing: MissingItem[] = [];
 
-    const liasses = case_.documents.filter(
+    const liasses = caseData.documents.filter(
       (d) => d.type === 'liasse_fiscale',
     );
     if (liasses.length < requirements.minLiasses) {
@@ -26,7 +26,7 @@ export class CompletenessEngine {
       });
     }
 
-    const releves = case_.documents.filter(
+    const releves = caseData.documents.filter(
       (d) => d.type === 'releve_bancaire',
     );
     const byAccount = new Map<string, typeof releves>();

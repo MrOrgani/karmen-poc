@@ -1,10 +1,10 @@
 import { documentRequirementsFor } from './document-requirements';
 import type { AugmentedCase, DataCoverage } from './types';
 
-export function computeDataCoverage(case_: AugmentedCase): DataCoverage {
-  const requirements = documentRequirementsFor(case_.financing_request.type);
+export function computeDataCoverage(caseData: AugmentedCase): DataCoverage {
+  const requirements = documentRequirementsFor(caseData.financing_request.type);
 
-  const liasseYears = case_.documents
+  const liasseYears = caseData.documents
     .filter((d) => d.type === 'liasse_fiscale')
     .map((d) => d.metadata.year)
     .filter((y): y is number => typeof y === 'number');
@@ -14,7 +14,7 @@ export function computeDataCoverage(case_: AugmentedCase): DataCoverage {
     !requirements.requirePreviousYearLiasse ||
     (maxYear !== null && liasseYears.includes(maxYear - 1));
 
-  const releves = case_.documents.filter((d) => d.type === 'releve_bancaire');
+  const releves = caseData.documents.filter((d) => d.type === 'releve_bancaire');
   const monthsByAccount = new Map<string, number>();
   for (const doc of releves) {
     const key = doc.metadata.account ?? doc.metadata.bank ?? doc.id;

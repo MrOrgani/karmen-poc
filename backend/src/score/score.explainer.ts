@@ -22,12 +22,12 @@ function severest(flags: RedFlag[]): RedFlag | undefined {
 export class ScoreExplainer {
   constructor(private readonly engine: RuleEngine = new RuleEngine()) {}
 
-  explain(case_: AugmentedCase, redFlags: RedFlag[]): ScoreExplanation {
+  explain(caseData: AugmentedCase, redFlags: RedFlag[]): ScoreExplanation {
     const input: RuleInput = {
-      fin: case_.financialIndicators,
-      bank: case_.bankFlows,
-      financingType: case_.financing_request.type,
-      factoring: case_.factoringIndicators,
+      fin: caseData.financialIndicators,
+      bank: caseData.bankFlows,
+      financingType: caseData.financing_request.type,
+      factoring: caseData.factoringIndicators,
     };
     const bullets: ScoreBullet[] = BULLET_ORDER.map((theme) => {
       const inTheme = redFlags.filter((f) => f.theme === theme);
