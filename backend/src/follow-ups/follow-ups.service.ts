@@ -1,30 +1,66 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { CompletenessEngine } from '../completeness/completeness.engine';
 import type { AugmentedCase } from '../cases/types';
+import { LLM_CLIENT, type LlmClient } from '../llm/llm.client';
+import {
+  FOLLOW_UP_SYSTEM_PROMPT,
+  buildFollowUpUserPrompt,
+} from './follow-ups.prompt';
 
 export type FollowUpDraft = {
   subject: string;
   body: string;
   missingDocs: string[];
+  source: 'llm' | 'template';
+  latencyMs: number;
 };
 
 @Injectable()
 export class FollowUpsService {
-  constructor(private readonly completeness: CompletenessEngine) {}
+  private readonly logger = new Logger(FollowUpsService.name);
+
+  constructor(
+    private readonly completeness: CompletenessEngine,
+    @Inject(LLM_CLIENT) private readonly llm: LlmClient,
+  ) {}
 
   /**
-   * Mock LLM. Génère un brouillon d'email à partir du case.
-   * La liste des pièces manquantes est dérivée en interne via CompletenessEngine
-   * pour que l'invariant "un follow-up reflète l'état documentaire actuel" reste local.
-   * Branchement LLM réel (Claude/OpenAI) à activer en prod via env var.
+   * Génère un brouillon d'email à partir du case.
+   * Stratégie : tente le LLM (si configuré) puis retombe sur un template déterministe.
+   * Le template reste le filet de sécurité (offline, tests, quota, timeout).
    */
-  draftForCase(caseData: AugmentedCase): FollowUpDraft {
+  async draftForCase(
+    caseData: AugmentedCase,
+    signal?: AbortSignal,
+  ): Promise<FollowUpDraft> {
     const missing = this.completeness.check(caseData).missing;
-    const { company, financing_request: req } = caseData;
-    const missingDocs = missing.map((m) => m.reason);
-
+    const missingDocs = missing.map((m) => m.clientAsk);
     const subject = `Karmen — Pièces complémentaires pour votre dossier de financement`;
 
+    const startedAt = Date.now();
+    const llmBody = await this.llm.generate({
+      system: FOLLOW_UP_SYSTEM_PROMPT,
+      user: buildFollowUpUserPrompt(caseData, missingDocs),
+      signal,
+    });
+    const latencyMs = Date.now() - startedAt;
+
+    if (llmBody) {
+      return { subject, body: llmBody, missingDocs, source: 'llm', latencyMs };
+    }
+
+    return {
+      subject,
+      body: this.fallbackBody(caseData, missingDocs),
+      missingDocs,
+      source: 'template',
+      latencyMs,
+    };
+  }
+
+  /** Template déterministe — ex-implémentation, conservée comme fallback. */
+  private fallbackBody(caseData: AugmentedCase, missingDocs: string[]): string {
+    const { company, financing_request: req } = caseData;
     const ownerName = company.owner?.trim();
     const intro = ownerName ? `Bonjour ${ownerName},` : 'Bonjour,';
     const amount =
@@ -37,14 +73,12 @@ export class FollowUpsService {
         : 'la durée demandée';
     const context = `Nous avons bien reçu votre demande de financement de ${amount} sur ${duration} pour ${company.name}.`;
     const ask =
-      missing.length === 0
+      missingDocs.length === 0
         ? `Votre dossier est complet, notre analyste reviendra vers vous sous 48h.`
         : `Pour finaliser l'analyse, il nous manque les éléments suivants :\n\n${missingDocs.map((d) => `  • ${d}`).join('\n')}\n\nMerci de nous transmettre ces pièces dès que possible via votre espace client.`;
     const outro = `Cordialement,\nL'équipe Karmen`;
 
-    const body = `${intro}\n\n${context}\n\n${ask}\n\n${outro}`;
-
-    return { subject, body, missingDocs };
+    return `${intro}\n\n${context}\n\n${ask}\n\n${outro}`;
   }
 }
 

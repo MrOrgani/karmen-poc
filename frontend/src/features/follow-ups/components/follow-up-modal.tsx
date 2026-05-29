@@ -39,6 +39,8 @@ export function FollowUpModal({ caseId, open, onOpenChange }: Props) {
     setForm({ subject: draft.subject, body: draft.body });
     track("follow-up.draft.generated", caseId, {
       missingCount: draft.missingDocs.length,
+      source: draft.source,
+      latencyMs: draft.latencyMs,
     });
   }
 
@@ -88,7 +90,9 @@ export function FollowUpModal({ caseId, open, onOpenChange }: Props) {
           </DialogTitle>
           <DialogDescription>
             Email pré-rédigé à partir des pièces manquantes. Éditable avant
-            envoi. (LLM mocké — POC.)
+            envoi.
+            {draft?.source === "llm" && " (Généré par Claude.)"}
+            {draft?.source === "template" && " (Modèle hors-ligne.)"}
           </DialogDescription>
         </DialogHeader>
 

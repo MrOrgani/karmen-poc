@@ -4,6 +4,8 @@ export type FollowUpDraft = {
   subject: string;
   body: string;
   missingDocs: string[];
+  source: "llm" | "template";
+  latencyMs: number;
 };
 
 export function draftFollowUp(
