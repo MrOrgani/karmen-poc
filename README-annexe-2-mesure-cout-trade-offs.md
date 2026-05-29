@@ -137,7 +137,7 @@ Ordre = priorité produit (impact / effort).
 
 ### Moyen terme (J3 + J4 de la roadmap)
 4. **Note IA pré-rédigée** (J3) — cf. §2 ci-dessus pour le chiffrage et l'arbitrage modèle.
-5. **Pré-validation no-brainers en 1 clic** (J4) : règle d'éligibilité = `score >= seuil` & `completeness = 100%` & `0 red flag high`. Brasserie du Marais y serait éligible.
+5. **Pré-validation no-brainers en 1 clic** (J4) : règle d'éligibilité = `score >= seuil` & `isComplete === true` & `0 red flag high`. Brasserie du Marais y serait éligible.
 6. **Indicateurs factoring complémentaires** : `CONCENTRATION_TOP_5`, `DEBTOR_PAYMENT_INCIDENTS`, `SECTOR_CONCENTRATION` (les 3 premiers — concentration top 1, balance âgée, dilution — sont livrés).
 
 ### Long terme (vers la prod)

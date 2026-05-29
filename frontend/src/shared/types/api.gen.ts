@@ -103,7 +103,6 @@ export type MissingItem = {
 };
 
 export type CompletenessResult = {
-  score: number;
   isComplete: boolean;
   missing: MissingItem[];
 };
@@ -203,5 +202,5 @@ export type CaseSummary = {
   amount: number;
   riskBucket: RiskBucket;
   globalScore: number;
-  completenessScore: number;
+  isComplete: boolean;
 };

@@ -204,7 +204,7 @@ type AugmentedDossier = {
 
 | Méthode | Route | Description | Response |
 |---|---|---|---|
-| `GET` | `/dossiers` | Liste les 4 dossiers + badge complétude | `Array<{id, companyName, type, amount, riskBucket, completenessScore}>` |
+| `GET` | `/cases` | Liste les 4 cases + badge complétude | `Array<{id, companyName, type, amount, riskBucket, globalScore, isComplete}>` |
 | `GET` | `/dossiers/:id/cockpit` | **L'endpoint roi** — agrège tout pour l'écran cockpit | `CockpitResponseDto` |
 | `POST` | `/relances/draft` | Génère le brouillon d'email de relance (LLM ou mock) | `{ subject, body, missingDocs: string[] }` |
 | `POST` | `/decisions` | Enregistre une décision (log console pour POC) | `{ ok: true, decision, dossierId }` |
@@ -218,7 +218,7 @@ type AugmentedDossier = {
 ```typescript
 type CockpitResponse = {
   dossier: AugmentedDossier;
-  completeness: { score: number; isComplete: boolean; missing: MissingItem[] };
+  completeness: { isComplete: boolean; missing: MissingItem[] };
   dataCoverage: { hasPreviousYearLiasse: boolean; bankMonthsCovered: number; isBankFlowsExtrapolated: boolean };
   redFlags: Array<{ severity: 'low'|'medium'|'high'; code: string; label: string; value: string }>;
   metricStatuses: Record<MetricKey, { status: 'ok'|'warn'|'alert'|'unknown'; unavailableReason?: string }>;

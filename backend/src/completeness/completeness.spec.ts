@@ -59,7 +59,6 @@ describe('CompletenessEngine', () => {
     });
     const result = engine.check(case_);
     expect(result.isComplete).toBe(true);
-    expect(result.score).toBe(100);
     expect(result.missing).toHaveLength(0);
   });
 
@@ -118,24 +117,21 @@ describe('CompletenessEngine', () => {
     });
     const result = engine.check(case_);
     expect(result.isComplete).toBe(true);
-    expect(result.score).toBe(100);
   });
 
   // ─── Edge cases ──────────────────────────────────────────
 
-  it('0 relevé + 2 liasses → score plafonné à 25% (signal de criticité)', () => {
+  it('0 relevé + 2 liasses → missing relevé bancaire, isComplete false', () => {
     const case_ = makeCase({ documents: [liasse('d1', 2023), liasse('d2', 2024)] });
     const result = engine.check(case_);
-    expect(result.score).toBeLessThanOrEqual(25);
     expect(result.isComplete).toBe(false);
+    expect(result.missing.find((m) => m.type === 'releve_bancaire')).toBeDefined();
   });
 
-  it('0 document du tout → score plafonné, missing items pour liasse ET relevé', () => {
+  it('0 document du tout → missing items pour liasse ET relevé', () => {
     const case_ = makeCase({ documents: [] });
     const result = engine.check(case_);
     expect(result.isComplete).toBe(false);
-    expect(result.score).toBeGreaterThanOrEqual(0);
-    expect(result.score).toBeLessThanOrEqual(25);
     expect(result.missing.find((m) => m.type === 'liasse_fiscale')).toBeDefined();
     expect(result.missing.find((m) => m.type === 'releve_bancaire')).toBeDefined();
   });
@@ -150,7 +146,6 @@ describe('CompletenessEngine', () => {
     });
     const result = engine.check(case_);
     expect(result.isComplete).toBe(true);
-    expect(result.score).toBe(100);
   });
 
   it('relevés sans account, banques différentes → buckets distincts', () => {
@@ -198,11 +193,11 @@ describe('CompletenessEngine', () => {
     });
     const loanResult = engine.check(loanCase);
     const factoringResult = engine.check(factoringCase);
-    expect(loanResult.score).toBe(factoringResult.score);
+    expect(loanResult.isComplete).toBe(factoringResult.isComplete);
     expect(loanResult.missing).toHaveLength(factoringResult.missing.length);
   });
 
-  it('multiples comptes tous incomplets → score clampé à >= 0, missing items multiples', () => {
+  it('multiples comptes tous incomplets → missing items multiples', () => {
     const case_ = makeCase({
       documents: [
         releve('d1', 'BNP', 'FR76A', 3),
@@ -212,21 +207,7 @@ describe('CompletenessEngine', () => {
     });
     const result = engine.check(case_);
     expect(result.isComplete).toBe(false);
-    expect(result.score).toBeGreaterThanOrEqual(0);
-    expect(result.missing.length).toBeGreaterThanOrEqual(3); // liasse + 3 comptes incomplets
-  });
-
-  it('score arrondi correctement (1 manquant sur 3 items = 67%)', () => {
-    const case_ = makeCase({
-      documents: [
-        liasse('d1', 2024), // 1 sur 2 → missing 1 liasse
-        releve('d2', 'BNP', 'FR76X', 12),
-        releve('d3', 'LCL', 'FR76Y', 12),
-      ],
-    });
-    const result = engine.check(case_);
-    // totalItems = 1 + 2 accounts = 3, missing = 1 (liasse) → completed = 2 → 66.67 → 67
-    expect(result.score).toBe(67);
+    expect(result.missing.length).toBeGreaterThanOrEqual(4); // liasse + 3 comptes incomplets
   });
 
   it('reason de missing liasse inclut le détail dans details', () => {

@@ -67,7 +67,7 @@ L'écran est **instrumenté jour 1** : chaque interaction émet un event horodat
 
 ### Modules backend (NestJS)
 
-- **CompletenessEngine** (module profond, pur, sans état) — interface unique : `check(dossier: AugmentedDossier) → { score: number, isComplete: boolean, missing: MissingItem[] }`. Encapsule les règles `liasseFiscaleMinCount` et `minMonthsPerBankAccount` par type de financement. Table de règles déclarative pour faciliter l'ajout de nouveaux types de pièces. Le score est calculé comme `completedItems / totalItems × 100`.
+- **CompletenessEngine** (module profond, pur, sans état) — interface unique : `check(case_: AugmentedCase) → { isComplete: boolean, missing: MissingItem[] }`. Encapsule les règles `liasseFiscaleMinCount` et `minMonthsPerBankAccount` par type de financement. Table de règles déclarative pour faciliter l'ajout de nouveaux types de pièces. Le score 0-100 historique a été retiré (dead surface : front et back le ramenaient au seul booléen `isComplete`).
 - **RuleEngine** (module profond, pur, sans état) — **source unique de vérité métier**. Interface : `evaluateAll(indicators, bankFlows, dataCoverage) → { redFlags, metricStatuses, diagnostic, thresholds }`. Une table déclarative de 10 règles (code, condition, severity, label, catégorie `financial|bank`, formatter de la valeur, rationale du popover, prérequis de données pour le gating Option 2). Codes : `DEBT_TO_EBITDA_HIGH/MEDIUM`, `EBITDA_MARGIN_LOW`, `EBITDA_NEGATIVE_OR_ZERO`, `NEGATIVE_NET_INCOME`, `REVENUE_DECLINING` (gated sur N-1), `OVERDRAFT_DAYS_HIGH`, `REJECTED_PAYMENTS`, `LOW_CASH_POSITION`, `DSO_LONG`.
 - **RedFlagDetector** — façade conservée pour compat de contrat ; délègue intégralement à `RuleEngine.redFlags()`. *Évolution post-bloc 2 : la promotion de la table de règles en `RuleEngine` était indispensable pour produire le diagnostic 10 indicateurs et garantir que `redFlags`, tuiles, popovers et bullets du score partagent strictement le même référentiel.*
 - **ScoreExplainer** (module profond, pur) — `explain(dossier, redFlags) → ScoreBullet[]`. Produit 3 bullets max, priorise les angles rentabilité / endettement / flux bancaires. *Évolution : chaque bullet porte désormais `ruleCodes: string[]` permettant le cross-highlight bullet → tuile côté front.*
@@ -108,7 +108,7 @@ L'écran est **instrumenté jour 1** : chaque interaction émet un event horodat
 ```typescript
 type CockpitResponse = {
   dossier: AugmentedDossier;
-  completeness: { score: number; isComplete: boolean; missing: MissingItem[] };
+  completeness: { isComplete: boolean; missing: MissingItem[] };
   dataCoverage: {                       // Hybrid Option 2 — quelles données sont disponibles
     hasPreviousYearLiasse: boolean;
     bankMonthsCovered: number;
@@ -149,7 +149,7 @@ Le champ `FinancialIndicators.revenuePreviousYear` est `number | null` côté ba
 
 **Modules testés (Jest, déjà présent dans le setup NestJS) :**
 
-- **CompletenessEngine** — cas couverts : dossier prêt complet (2 liasses + 12 mois bancaires) → `isComplete: true, score: 100` ; dossier prêt avec 1 seule liasse → `missing` contient un item de type `liasse_fiscale` avec ratio dans la raison ; dossier avec relevé bancaire à 10 mois → `missing` contient un item `releve_bancaire` mentionnant le nombre de mois et le nom de la banque ; dossier multi-comptes bancaires (LCL + BNP) → checks indépendants par compte.
+- **CompletenessEngine** — cas couverts : dossier prêt complet (2 liasses + 12 mois bancaires) → `isComplete: true` ; dossier prêt avec 1 seule liasse → `missing` contient un item de type `liasse_fiscale` avec ratio dans la raison ; dossier avec relevé bancaire à 10 mois → `missing` contient un item `releve_bancaire` mentionnant le nombre de mois et le nom de la banque ; dossier multi-comptes bancaires (LCL + BNP) → checks indépendants par compte.
 - **RedFlagDetector** — cas couverts : chaque règle déclenche son code attendu sur des valeurs en zone critique (ex. `totalDebt=11×ebitda` → `DEBT_TO_EBITDA_HIGH`) ; aucune règle ne déclenche sur des valeurs saines ; sévérités correctes pour les paliers (ex. dette/EBITDA entre 3 et 5 → `MEDIUM`, > 5 → `HIGH`) ; le formatter de la valeur produit la chaîne attendue (ex. `"11.2× (seuil critique > 5×)"`).
 - **ScoreExplainer** — cas couverts : produit ≤3 bullets ; en présence de red flags HIGH, au moins un bullet reflète l'angle problématique ; sur un dossier sain (aucun red flag, marge EBITDA > 10%, dette/EBITDA < 2), les 3 bullets reflètent rentabilité, endettement, trésorerie.
 

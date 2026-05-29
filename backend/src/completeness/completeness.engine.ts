@@ -64,13 +64,6 @@ export class CompletenessEngine {
       }
     }
 
-    const totalItems = 1 + Math.max(byAccount.size, 1);
-    const completedItems = Math.max(0, totalItems - missing.length);
-    let score = Math.round((completedItems / totalItems) * 100);
-    if (releves.length === 0) {
-      score = Math.min(score, 25);
-    }
-
-    return { score, isComplete: missing.length === 0, missing };
+    return { isComplete: missing.length === 0, missing };
   }
 }

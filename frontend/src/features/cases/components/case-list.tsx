@@ -56,7 +56,7 @@ export function CaseList({ cases }: Props) {
     <div className="grid gap-3 md:grid-cols-2">
       {cases.map((row) => {
         const TypeIcon = TYPE_ICON[row.type] ?? Banknote;
-        const isComplete = row.completenessScore === 100;
+        const isComplete = row.isComplete;
         return (
           <Link
             key={row.id}

@@ -22,7 +22,7 @@ export class CasesController {
       amount: c.financing_request.amount,
       riskBucket: c.score.risk_bucket,
       globalScore: c.score.global_score,
-      completenessScore: this.completeness.check(c).score,
+      isComplete: this.completeness.check(c).isComplete,
     }));
   }
 
