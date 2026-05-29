@@ -4,8 +4,12 @@ import type { CasesRepository } from '../cases/cases.repository';
 import type { AugmentedCase } from '../cases/types';
 import { EventsStore } from '../events/events.store';
 import { DecisionsController } from './decisions.controller';
+import type { DecisionsService } from './decisions.service';
 
 type Status = AugmentedCase['financing_request']['status'];
+
+// record() never touches the AI justification service — an empty stub is enough.
+const decisionsStub = {} as unknown as DecisionsService;
 
 function makeRepo(found: boolean): {
   repo: CasesRepository;
@@ -38,7 +42,7 @@ describe('DecisionsController.record', () => {
       'decision=%s → mute le repo en status=%s et pousse event decision.made',
       async (decision, expectedStatus) => {
         const { repo, updateStatus } = makeRepo(true);
-        const controller = new DecisionsController(events, repo);
+        const controller = new DecisionsController(events, repo, decisionsStub);
 
         const res = await controller.record({
           caseId: 'fr-001',
@@ -63,7 +67,7 @@ describe('DecisionsController.record', () => {
 
   it('dossier introuvable → NotFoundException, aucun event pushé', async () => {
     const { repo, updateStatus } = makeRepo(false);
-    const controller = new DecisionsController(events, repo);
+    const controller = new DecisionsController(events, repo, decisionsStub);
 
     await expect(
       controller.record({
@@ -79,7 +83,7 @@ describe('DecisionsController.record', () => {
 
   it('decision invalide → BadRequestException, repo non appelé, aucun event', async () => {
     const { repo, updateStatus } = makeRepo(true);
-    const controller = new DecisionsController(events, repo);
+    const controller = new DecisionsController(events, repo, decisionsStub);
 
     await expect(
       controller.record({
@@ -99,7 +103,7 @@ describe('DecisionsController.record', () => {
     ['caseId undefined', undefined],
   ])('%s → BadRequestException', async (_, caseId) => {
     const { repo, updateStatus } = makeRepo(true);
-    const controller = new DecisionsController(events, repo);
+    const controller = new DecisionsController(events, repo, decisionsStub);
 
     await expect(
       controller.record({ caseId, decision: 'approve', justification: '' }),
@@ -110,7 +114,7 @@ describe('DecisionsController.record', () => {
 
   it('justification > 500 caractères → tronquée dans le payload event', async () => {
     const { repo } = makeRepo(true);
-    const controller = new DecisionsController(events, repo);
+    const controller = new DecisionsController(events, repo, decisionsStub);
     const longJustif = 'a'.repeat(800);
 
     await controller.record({
@@ -127,7 +131,7 @@ describe('DecisionsController.record', () => {
 
   it('justification non-string → traitée comme chaîne vide', async () => {
     const { repo } = makeRepo(true);
-    const controller = new DecisionsController(events, repo);
+    const controller = new DecisionsController(events, repo, decisionsStub);
 
     await controller.record({
       caseId: 'fr-001',

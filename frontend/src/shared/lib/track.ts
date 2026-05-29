@@ -10,6 +10,7 @@ export type EventType =
   | "follow-up.modal.opened"
   | "follow-up.draft.generated"
   | "follow-up.sent"
+  | "decision.justification.drafted"
   | "decision.made"
   | "http.request";
 

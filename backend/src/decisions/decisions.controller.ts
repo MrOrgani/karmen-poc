@@ -10,6 +10,8 @@ import {
 import { CasesRepository } from '../cases/cases.repository';
 import type { AugmentedCase } from '../cases/types';
 import { EventsStore } from '../events/events.store';
+import { DecisionsService, type JustificationDraft } from './decisions.service';
+import type { DecisionDirection } from '../score/decision-alignment';
 
 type DecisionType = 'approve' | 'request_docs' | 'reject';
 const VALID_DECISIONS: readonly DecisionType[] = [
@@ -54,7 +56,30 @@ export class DecisionsController {
   constructor(
     private readonly events: EventsStore,
     private readonly cases: CasesRepository,
+    private readonly decisions: DecisionsService,
   ) {}
+
+  /**
+   * Drafts an AI justification for a decision the analyst is leaning towards
+   * (approve/reject only — "request_docs" is handled by the deterministic follow-up flow).
+   * The decision is NOT recorded here: this is decision-support, the analyst still confirms via record().
+   */
+  @Post('justification')
+  @HttpCode(200)
+  async justify(@Body() body: DecisionBody): Promise<JustificationDraft> {
+    if (typeof body?.caseId !== 'string' || body.caseId.length === 0) {
+      throw new BadRequestException(
+        'Invalid "caseId" (non-empty string required)',
+      );
+    }
+    if (body.decision !== 'approve' && body.decision !== 'reject') {
+      throw new BadRequestException(
+        'Invalid "decision" (expected "approve" or "reject")',
+      );
+    }
+    const direction: DecisionDirection = body.decision;
+    return this.decisions.draftJustification(body.caseId, direction);
+  }
 
   @Post()
   @HttpCode(201)

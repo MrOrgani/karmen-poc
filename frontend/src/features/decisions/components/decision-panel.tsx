@@ -20,12 +20,20 @@ import {
   FileSignature,
   Loader2,
   ArrowRight,
+  Sparkles,
 } from "lucide-react";
-import { type DecisionType } from "@/features/decisions/api";
+import {
+  type DecisionType,
+  type JustificationAlignment,
+  type JustificationDirection,
+} from "@/features/decisions/api";
 import { useRecordDecision } from "@/features/decisions/hooks/use-record-decision";
+import { useDraftJustification } from "@/features/decisions/hooks/use-draft-justification";
 import { useParams } from "@tanstack/react-router";
 import { useHighlight } from "@/features/cases/hooks/use-rule-highlight";
 import { FollowUpModal } from "@/features/follow-ups/components/follow-up-modal";
+import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover";
+import { track } from "@/shared/lib/track";
 import type {
   AugmentedCase,
   RiskBucket,
@@ -65,6 +73,35 @@ export function DecisionPanel({ score, explanation }: Props) {
   );
   const [followUpOpen, setFollowUpOpen] = useState(false);
   const mutation = useRecordDecision(caseId);
+
+  const draftMutation = useDraftJustification(caseId);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [draftMeta, setDraftMeta] = useState<{
+    source: "llm" | "template";
+    alignment: JustificationAlignment;
+  } | null>(null);
+
+  // The analyst picks the direction → the AI verbalises the diagnostic for THAT choice.
+  // The decision itself is still recorded separately via the buttons below.
+  const generate = (direction: JustificationDirection) => {
+    draftMutation.mutate(direction, {
+      onSuccess: (draft) => {
+        setJustification(draft.body);
+        setDraftMeta({ source: draft.source, alignment: draft.alignment });
+        setMenuOpen(false);
+        track("decision.justification.drafted", caseId, {
+          direction: draft.direction,
+          alignment: draft.alignment,
+          source: draft.source,
+          latencyMs: draft.latencyMs,
+          // Logged so the acceptance signal (edit-distance draft → recorded justification
+          // in the eventual decision.made) becomes computable post-hoc.
+          body: draft.body,
+          bodyLength: draft.body.length,
+        });
+      },
+    });
+  };
 
   const handle = (decision: DecisionType) => {
     setPendingDecision(decision);
@@ -142,12 +179,57 @@ export function DecisionPanel({ score, explanation }: Props) {
         </section>
 
         <div>
-          <label
-            htmlFor="justification"
-            className="block text-xs uppercase tracking-widest text-karmen-mute font-semibold mb-1.5"
-          >
-            Justification (1 phrase suffit)
-          </label>
+          <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2">
+            <label
+              htmlFor="justification"
+              className="text-xs uppercase tracking-widest text-karmen-mute font-semibold"
+            >
+              Justification (1 phrase suffit)
+            </label>
+            <Popover open={menuOpen} onOpenChange={setMenuOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={disabledAll || draftMutation.isPending}
+                  className="h-7 gap-1.5 border-karmen-border-blue text-karmen-blue hover:bg-karmen-pale-blue"
+                >
+                  {draftMutation.isPending ? (
+                    <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Sparkles aria-hidden className="h-3.5 w-3.5" />
+                  )}
+                  Pré-rédiger
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-60 p-1.5">
+                <p className="px-2 py-1.5 text-[11px] leading-snug text-karmen-mute">
+                  L'IA habille le diagnostic. Vous décidez — elle ne tranche
+                  pas.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => generate("approve")}
+                  className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm text-karmen-ink hover:bg-karmen-pale-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-karmen-blue cursor-pointer"
+                >
+                  <CheckCircle2
+                    aria-hidden
+                    className="h-4 w-4 text-emerald-600"
+                  />
+                  Justifier un accord
+                </button>
+                <button
+                  type="button"
+                  onClick={() => generate("reject")}
+                  className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm text-karmen-ink hover:bg-karmen-pale-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-karmen-blue cursor-pointer"
+                >
+                  <XCircle aria-hidden className="h-4 w-4 text-destructive" />
+                  Justifier un refus
+                </button>
+              </PopoverContent>
+            </Popover>
+          </div>
           <textarea
             id="justification"
             name="justification"
@@ -160,6 +242,28 @@ export function DecisionPanel({ score, explanation }: Props) {
             className="w-full rounded-md border border-karmen-border-blue/60 bg-white px-3 py-2 text-sm text-karmen-ink placeholder:text-karmen-mute disabled:bg-muted disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-karmen-blue focus-visible:ring-offset-2 focus-visible:border-karmen-blue"
             placeholder="Ex&nbsp;: bonne rentabilité, trésorerie tendue mais flux stables…"
           />
+          {draftMutation.isError && (
+            <p className="mt-1.5 text-[11px] text-destructive">
+              Génération échouée&nbsp;: {draftMutation.error.message}
+            </p>
+          )}
+          {draftMeta && !draftMutation.isError && (
+            <p
+              className={cn(
+                "mt-1.5 flex items-center gap-1.5 text-[11px]",
+                draftMeta.alignment === "divergent"
+                  ? "text-amber-700"
+                  : "text-karmen-mute",
+              )}
+            >
+              <Sparkles aria-hidden className="h-3 w-3 shrink-0" />
+              {draftMeta.alignment === "divergent"
+                ? "Décision non étayée par le diagnostic — précisez le motif hors-modèle."
+                : draftMeta.source === "llm"
+                  ? "Brouillon généré par Claude — à relire et éditer."
+                  : "Brouillon déterministe (modèle hors-ligne) — à relire et éditer."}
+            </p>
+          )}
         </div>
 
         <div className="flex flex-wrap justify-end gap-2">
