@@ -1,16 +1,15 @@
-/* eslint-disable */
 // AUTO-GENERATED depuis backend/src/cases/types.ts — ne pas éditer.
-export type FinancingType = 'loan' | 'factoring';
-export type RiskBucket = 'low' | 'medium' | 'high';
-export type DocumentType = 'liasse_fiscale' | 'releve_bancaire';
-export type Severity = 'low' | 'medium' | 'high';
-export type MetricStatus = 'ok' | 'warn' | 'alert' | 'unknown';
-export type RedFlagCategory = 'financial' | 'bank' | 'factoring';
+export type FinancingType = "loan" | "factoring";
+export type RiskBucket = "low" | "medium" | "high";
+export type DocumentType = "liasse_fiscale" | "releve_bancaire";
+export type Severity = "low" | "medium" | "high";
+export type MetricStatus = "ok" | "warn" | "alert" | "unknown";
+export type RedFlagCategory = "financial" | "bank" | "factoring";
 /**
  * Vue analytique transverse sur les règles (orthogonale à `RedFlagCategory`).
  * Sert à regrouper les flags pour la synthèse en 3 bullets du DecisionPanel.
  */
-export type Theme = 'profitability' | 'debt' | 'cash';
+export type Theme = "profitability" | "debt" | "cash";
 
 export type CaseDocument = {
   id: string;
@@ -75,7 +74,7 @@ export type AugmentedCase = {
   financing_request: {
     id: string;
     type: FinancingType;
-    status: 'pending_review' | 'approved' | 'rejected' | 'awaiting_documents';
+    status: "pending_review" | "approved" | "rejected" | "awaiting_documents";
     company_id: string;
     fundUsage: string;
     rejectedReason: string | null;
@@ -98,7 +97,10 @@ export type AugmentedCase = {
 
 export type MissingItem = {
   type: DocumentType;
+  /** Statut côté analyste, affiché dans la tuile complétude. Ex: "1/2 liasses fournies". */
   reason: string;
+  /** Demande actionnable adressée au dirigeant, utilisée dans l'email de relance. Ex: "Liasse fiscale — 1 année supplémentaire à fournir". */
+  clientAsk: string;
   details?: Record<string, unknown>;
 };
 

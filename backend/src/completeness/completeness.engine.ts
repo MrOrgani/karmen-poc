@@ -18,9 +18,15 @@ export class CompletenessEngine {
       (d) => d.type === 'liasse_fiscale',
     );
     if (liasses.length < requirements.minLiasses) {
+      const missingCount = requirements.minLiasses - liasses.length;
+      const clientAsk =
+        liasses.length === 0
+          ? `Liasse fiscale des ${requirements.minLiasses} dernières années (bilan + compte de résultat)`
+          : `Liasse fiscale — ${missingCount} année${missingCount > 1 ? 's' : ''} supplémentaire${missingCount > 1 ? 's' : ''} à fournir`;
       missing.push({
         type: 'liasse_fiscale',
         reason: `${liasses.length}/${requirements.minLiasses} liasses fournies`,
+        clientAsk,
         details: {
           provided: liasses.length,
           required: requirements.minLiasses,
@@ -44,6 +50,7 @@ export class CompletenessEngine {
       missing.push({
         type: 'releve_bancaire',
         reason: `Aucun relevé bancaire fourni (${requirements.minMonthsPerBankAccount} mois requis)`,
+        clientAsk: `Relevés bancaires des ${requirements.minMonthsPerBankAccount} derniers mois (pour chaque compte professionnel)`,
       });
     }
 
@@ -54,9 +61,11 @@ export class CompletenessEngine {
       );
       const bank = docs[0].metadata.bank ?? 'banque inconnue';
       if (months < requirements.minMonthsPerBankAccount) {
+        const missingMonths = requirements.minMonthsPerBankAccount - months;
         missing.push({
           type: 'releve_bancaire',
           reason: `Seulement ${months} mois sur ${requirements.minMonthsPerBankAccount} pour ${bank}`,
+          clientAsk: `Relevés bancaires ${bank} — ${missingMonths} mois supplémentaire${missingMonths > 1 ? 's' : ''} à fournir (pour atteindre ${requirements.minMonthsPerBankAccount} mois)`,
           details: {
             account,
             bank,

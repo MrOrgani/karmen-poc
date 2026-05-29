@@ -96,7 +96,10 @@ export type AugmentedCase = {
 
 export type MissingItem = {
   type: DocumentType;
+  /** Statut côté analyste, affiché dans la tuile complétude. Ex: "1/2 liasses fournies". */
   reason: string;
+  /** Demande actionnable adressée au dirigeant, utilisée dans l'email de relance. Ex: "Liasse fiscale — 1 année supplémentaire à fournir". */
+  clientAsk: string;
   details?: Record<string, unknown>;
 };
 
