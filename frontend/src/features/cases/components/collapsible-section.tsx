@@ -7,16 +7,12 @@ import {
 } from "@/shared/ui/collapsible";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/shared/lib/utils";
-import { track } from "@/shared/lib/track";
-import { useParams } from "@tanstack/react-router";
 
 type Props = {
   title: string;
   icon?: ReactNode;
   badge?: ReactNode;
   defaultOpen?: boolean;
-  /** Section identifier passed to track() when expanded. */
-  sectionId?: string;
   children: ReactNode;
 };
 
@@ -25,21 +21,11 @@ export function CollapsibleSection({
   icon,
   badge,
   defaultOpen = false,
-  sectionId,
   children,
 }: Props) {
-  const caseId = useParams({ strict: false }).id;
   return (
     <Card className="overflow-hidden border-karmen-border-blue/60">
-      <Collapsible
-        defaultOpen={defaultOpen}
-        className="group"
-        onOpenChange={(open: boolean) => {
-          if (open && sectionId) {
-            track("cockpit.section.expanded", caseId, { section: sectionId });
-          }
-        }}
-      >
+      <Collapsible defaultOpen={defaultOpen} className="group">
         <CollapsibleTrigger className="w-full flex items-center justify-between p-4 text-left hover:bg-karmen-pale-blue/60 transition-colors motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-karmen-blue focus-visible:ring-inset">
           <div className="flex items-center gap-2 min-w-0">
             {icon}

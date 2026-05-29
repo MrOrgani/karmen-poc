@@ -48,7 +48,7 @@ export function CaseList({ cases }: Props) {
   useEffect(() => {
     if (cases && !viewedRef.current) {
       viewedRef.current = true;
-      track("cases.list.viewed", undefined, { count: cases.length });
+      track("case.list.viewed", undefined, { count: cases.length });
     }
   }, [cases]);
 

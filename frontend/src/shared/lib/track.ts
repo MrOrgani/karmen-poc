@@ -1,17 +1,18 @@
 /**
  * Canonical event taxonomy. Mirror of backend `EventType` in
- * `backend/src/events/events.types.ts`. `http.request` is emitted server-side
- * only (tracking middleware) — declared here for cross-stack consistency.
+ * `backend/src/events/events.types.ts`. Members tagged `server-side only` are
+ * never emitted by this client — they are pushed by the backend (tracking
+ * middleware / decisions controller) and declared here only to keep the
+ * cross-stack taxonomy complete.
  */
 export type EventType =
-  | "cases.list.viewed"
+  | "case.list.viewed"
   | "case.opened"
-  | "cockpit.section.expanded"
   | "follow-up.modal.opened"
   | "follow-up.draft.generated"
   | "follow-up.sent"
-  | "decision.made"
-  | "http.request";
+  | "decision.made" // server-side only (decisions controller)
+  | "http.request"; // server-side only (tracking middleware)
 
 type Payload = Record<string, unknown>;
 

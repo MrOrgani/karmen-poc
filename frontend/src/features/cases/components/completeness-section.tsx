@@ -63,7 +63,6 @@ export function CompletenessSection({ completeness, documents }: Props) {
       title="Complétude documentaire"
       icon={<FileCheck2 aria-hidden className="h-4 w-4 text-karmen-blue" />}
       defaultOpen
-      sectionId="completeness"
       badge={
         <span
           className={cn(

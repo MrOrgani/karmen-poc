@@ -1,7 +1,6 @@
 export type EventType =
   | 'case.list.viewed'
   | 'case.opened'
-  | 'cockpit.section.expanded'
   | 'follow-up.modal.opened'
   | 'follow-up.draft.generated'
   | 'follow-up.sent'
