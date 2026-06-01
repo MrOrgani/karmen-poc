@@ -6,16 +6,16 @@
 
 ## 1. Gain de temps par étape (détail)
 
-Décomposition honnête du workflow analyste, avec gain _qualitatif_ par étape et hypothèse agrégée. Les chiffres ci-dessous sont des **hypothèses de cadrage** validées en kickoff Grégoire ; la prochaine étape (cf. §4) est de les mesurer pour de vrai via les events instrumentés.
+Décomposition honnête du workflow analyste, avec gain _qualitatif_ par étape et hypothèse agrégée. La cible fixée par Greg est **30 min** ; l'agrégat ci-dessous (~21 min) est une **projection de cadrage** qui la sur-livre — à confirmer par la mesure. Les chiffres ci-dessous sont des **hypothèses de cadrage** validées en kickoff Grégoire ; la prochaine étape (cf. §4) est de les mesurer pour de vrai via les events instrumentés.
 
-| Étape analyste                      | Avant (≈)                                                   | Cockpit     | Mécanisme du gain                                                                                                                              | Hypothèse    |
-| ----------------------------------- | ----------------------------------------------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
-| **Vérifier la complétude**          | ~25 min (lecture manuelle + email rédigé à la main)         | ~3 min      | Détection auto liasse N/N-1 + mois bancaires par compte ; email pré-rédigé éditable en 1 clic                                                  | **-22 min**  |
-| **Creuser les données financières** | ~45 min (va-et-vient entre modules, reconstruction mentale) | ~10 min     | 10 tuiles groupées + popover seuil/méthodo en survol ; pas de tab-switch                                                                       | **-35 min**  |
-| **Consulter le scoring**            | ~5 min (rapide)                                             | ~2 min      | Score co-localisé avec la décision, plus de section séparée à dérouler                                                                         | **-3 min**   |
-| **Rédiger la recommandation**       | ~30 min (interface peu adaptée — _LE_ point de frustration) | ~5 min      | Justification = 1 phrase ; les 3 bullets de score sont la base de la note ; cross-highlight → la justification s'écrit en regardant les tuiles | **-25 min**  |
-| **Tracer la décision**              | ~10 min (saisie dans un autre outil)                        | ~1 min      | 3 boutons + textarea + POST dans le cockpit, confirmation modale sur refus                                                                     | **-9 min**   |
-| **Cumul**                           | **~115 min**                                                | **~21 min** |                                                                                                                                                | **~-95 min** |
+| Étape analyste                      | Avant (≈)                                                                                     | Cockpit     | Mécanisme du gain                                                                                                                              | Hypothèse    |
+| ----------------------------------- | --------------------------------------------------------------------------------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
+| **Vérifier la complétude**          | ~45 min (cross-check manuel 2 liasses + 12 mois × comptes, relance à la main, allers-retours) | ~3 min      | Détection auto liasse N/N-1 + mois bancaires par compte ; email pré-rédigé éditable en 1 clic                                                  | **-42 min**  |
+| **Creuser les données financières** | ~35 min (va-et-vient entre modules, reconstruction mentale)                                   | ~10 min     | 10 tuiles groupées + popover seuil/méthodo en survol ; pas de tab-switch                                                                       | **-25 min**  |
+| **Consulter le scoring**            | ~5 min (rapide)                                                                               | ~2 min      | Score co-localisé avec la décision, plus de section séparée à dérouler                                                                         | **-3 min**   |
+| **Rédiger la recommandation**       | ~25 min (interface peu adaptée — _LE_ point de frustration)                                   | ~5 min      | Justification = 1 phrase ; les 3 bullets de score sont la base de la note ; cross-highlight → la justification s'écrit en regardant les tuiles | **-20 min**  |
+| **Tracer la décision**              | ~5 min (saisie dans un autre outil)                                                           | ~1 min      | 3 boutons + textarea + POST dans le cockpit, confirmation modale sur refus                                                                     | **-4 min**   |
+| **Cumul**                           | **~115 min**                                                                                  | **~21 min** |                                                                                                                                                | **~-94 min** |
 
 > **Honnêteté méthodo.** Aucune baseline n'a été mesurée chez Karmen avant le POC — les valeurs "Avant" viennent de la triangulation interview + observation chronométrée prévue au cadrage (§1) et n'ont pas encore été collectées. C'est précisément ce que les events jour 1 permettront de combler en post-démo (§4 ci-dessous).
 
@@ -138,7 +138,7 @@ Ordre = priorité produit (impact / effort).
 ### Court terme (avant prochain débrief Karmen)
 
 1. **Mesurer la baseline réelle.** Brancher l'export `GET /api/events` sur un script qui agrège `dossier.opened` → `decision.made` par session, en croisant junior/senior. C'est l'ouverture du cycle mesure annoncé en cadrage §1.
-2. **Questions analystes Q1-Q3** non-collectées dans le cadrage (5-10 analystes, mix junior/senior + observation chronométrée 2 dossiers) — à mener avant d'investir dans J3.
+2. **Questions analystes Q1-Q4** non-collectées dans le cadrage (5-10 analystes, mix junior/senior + observation chronométrée 2 dossiers) — à mener avant d'investir dans J3.
 3. **Compléter la couverture du `RuleEngine`.** Le spike direct `rule-engine.spec.ts` couvre déjà `redFlags()` et `diagnostic()` (tuiles factoring) ; reste à couvrir `metricStatuses()`, sortie consommée par le front mais non encore testée directement.
 
 ### Moyen terme (J3 + J4 de la roadmap)

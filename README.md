@@ -1,6 +1,6 @@
 # Karmen — Test technique Max 2026-05 - POC Cockpit Analyste
 
-> Pas une feature livrée : une **réduction de 2h à ~21 min par dossier**, construite sur un cadrage validé Grégoire et **mesurable dès le jour 1** via events instrumentés.
+> Pas une feature livrée : une **trajectoire 2h → 30 min par dossier** (mon cadrage projette même ~21 min sur les 4 jalons — **hypothèse de cadrage, pas une mesure**), construite sur un cadrage validé Grégoire et **mesurable dès le jour 1** via events instrumentés.
 
 **Stack** NestJS + React/Vite + Tailwind + TanStack Router/Query + shadcn/ui
 
@@ -11,11 +11,11 @@
 ## 1. Le problème
 
 Un analyste Karmen traite un dossier PME en **2h en moyenne** (distribution bimodale 30 min ↔ 4h).  
-Les 4 étapes du workflow : complétude -> données financières -> scoring -> rédaction.
+Les 4 étapes du workflow (séquence) : complétude → scoring → données financières (creusées en fonction du score) → rédaction.
 
 Les informations sont dispersées sur plusieurs écrans, sans vue récap, avec **allers-retours email manuels** pour réclamer les pièces et **navigation onglet-à-onglet** pour reconstruire mentalement la santé financière.
 
-Ordre chronophagie validé Grégoire : complétude > financier > note > scoring.
+Poids en temps — ordre chronophagie validé Grégoire (distinct de la séquence ci-dessus) : complétude > financier > rédaction (point de frustration) > scoring.
 
 ## 2. Méthode de cadrage
 
@@ -70,7 +70,7 @@ Un **écran unique par dossier** qui empile, dans l'ordre où l'analyste pense :
 
 Chaque interaction (ouverture dossier, ouverture/envoi relance, décision) émet un **event horodaté exportable en JSON** (`GET /api/events`) → la métrique « temps moyen par dossier » (`case.opened`→`decision.made`, collapse `MIN(ts)` par dossier) devient calculable post-démo. Le détail de ce que l'apparatus peut et ne peut **pas** répondre — par métrique de la roadmap — est audité en **[annexe 3](README-annexe-3-audit-instrumentation.md)**.
 
-**Honnêteté méthodo** : aucune baseline n'a été mesurée chez Karmen avant le POC — les chiffres "2h → 21 min" ([détail par étape en annexe 2](README-annexe-2-mesure-cout-trade-offs.md#1-gain-de-temps-par-étape-détail)) sont des hypothèses de cadrage validées en kickoff. Les events permettent précisément de basculer de l'hypothèse à la mesure dès la prochaine session analyste.
+**Honnêteté méthodo** : aucune baseline n'a été mesurée chez Karmen avant le POC. La cible fixée par Greg reste **30 min** ; les chiffres de gain ("2h → ~21 min" projetés, [détail par étape en annexe 2](README-annexe-2-mesure-cout-trade-offs.md#1-gain-de-temps-par-étape-détail)) sont des **hypothèses de cadrage** validées en kickoff, pas des mesures. Les events permettent précisément de basculer de l'hypothèse à la mesure dès la prochaine session analyste.
 
 ## 6. Trade-offs assumés & roadmap
 
@@ -82,7 +82,7 @@ Chaque interaction (ouverture dossier, ouverture/envoi relance, décision) émet
 - instrumenter avant d'avoir des users,
 - enrichissement données factoring (3 indicateurs simulés sur 1 dossier — assumé).
 
-**Roadmap court terme** : mesurer baseline réelle + interviews analystes Q1-Q3 + tests directs `RuleEngine`.  
+**Roadmap court terme** : mesurer baseline réelle + interviews analystes Q1-Q4 + tests directs `RuleEngine`.  
 **Moyen terme** : J3 note IA pré-rédigée (Sonnet 4.x bootstrap, ~75 €/mois @ 4k dossiers, [chiffrage complet annexe 2](README-annexe-2-mesure-cout-trade-offs.md#2-coût-ia--projection-pour-j3-note-pré-rédigée)) + J4 pré-validation no-brainers + 3 règles factoring complémentaires (`CONCENTRATION_TOP_5`, `DEBTOR_PAYMENT_INCIDENTS`, `SECTOR_CONCENTRATION`).  
 **Long terme** : OCR réel, Open Banking réel, auth/RBAC/multi-tenant, persistance Postgres, idempotency décisions, audit a11y WCAG.
 

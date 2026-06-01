@@ -2,7 +2,7 @@
 
 > Complément au [README](README.md) §5 (Mesure). Lecture isolée possible.
 >
-> **Posture.** Le POC ne prétend **pas** _démontrer_ la réduction « 2h → 21 min » — avec un échantillon de **1 utilisateur en démo, toute mesure est statistiquement nulle**, et aucune baseline n'a été collectée (cf. README §5). Cette annexe prouve l'autre chose : que **l'apparatus de mesure est sain** — chaque événement émis correspond à une action analyste réelle, et on sait exactement quelle métrique de la roadmap il permet (ou non) de calculer.
+> **Posture.** Le POC ne prétend **pas** _démontrer_ la réduction visée (2h → 30 min, _a fortiori_ la projection de cadrage ~21 min) — avec un échantillon de **1 utilisateur en démo, toute mesure est statistiquement nulle**, et aucune baseline n'a été collectée (cf. README §5). Cette annexe prouve l'autre chose : que **l'apparatus de mesure est sain** — chaque événement émis correspond à une action analyste réelle, et on sait exactement quelle métrique de la roadmap il permet (ou non) de calculer.
 
 ---
 
