@@ -97,7 +97,7 @@ npm run dev          # back :3000 + front :5173 en parallèle
 # Ouvrir http://localhost:5173
 ```
 
-Tests : `npm run -w backend test` (12 specs `red-flags` + completeness + decisions). Typecheck : `npm run typecheck`.
+Tests : `npm run -w backend test` (45 assertions sur 4 specs : `rule-engine` 19, `completeness` 16, `score.explainer` 6, `decisions.controller` 4). Typecheck : `npm run typecheck`.
 
 ---
 
