@@ -10,6 +10,9 @@ build/
 test-results/
 playwright-report/
 playwright/.cache/
+.playwright-mcp/
 
 # Prep perso (hors livrable)
 PREP-DEBRIEF.md
+DECK-GAMMA.md
+cockpit-fr-*.png
