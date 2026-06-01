@@ -5,3 +5,11 @@ build/
 *.log
 .env
 .env.local
+
+# Playwright
+test-results/
+playwright-report/
+playwright/.cache/
+
+# Prep perso (hors livrable)
+PREP-DEBRIEF.md

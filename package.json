@@ -10,9 +10,11 @@
     "dev:back": "npm run start:dev --workspace=backend",
     "dev:front": "npm run dev --workspace=frontend",
     "build": "npm run build --workspaces",
+    "test:e2e": "playwright test",
     "prepare": "husky"
   },
   "devDependencies": {
+    "@playwright/test": "^1.50.0",
     "concurrently": "^8.2.2",
     "husky": "^9.1.7",
     "lint-staged": "^17.0.5"
