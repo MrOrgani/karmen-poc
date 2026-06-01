@@ -84,7 +84,7 @@ export function FollowUpModal({ caseId, open, onOpenChange }: Props) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-karmen-marine">
             <Sparkles aria-hidden className="h-4 w-4 text-karmen-blue" />
-            Follow-up draft
+            Brouillon de relance
           </DialogTitle>
           <DialogDescription>
             Email pré-rédigé à partir des pièces manquantes. Éditable avant
@@ -169,7 +169,7 @@ export function FollowUpModal({ caseId, open, onOpenChange }: Props) {
             className="bg-karmen-blue hover:bg-karmen-blue-dark text-white"
           >
             <Send aria-hidden className="h-4 w-4 mr-2" />
-            {sent ? "Sent ✓" : "Send follow-up"}
+            {sent ? "Envoyée ✓" : "Envoyer la relance"}
           </Button>
         </DialogFooter>
       </DialogContent>

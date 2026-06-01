@@ -193,20 +193,24 @@ export function DecisionPanel({ score, explanation }: Props) {
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Confirm case rejection?</AlertDialogTitle>
+                <AlertDialogTitle>
+                  Confirmer le refus du dossier ?
+                </AlertDialogTitle>
                 <AlertDialogDescription>
-                  This will record a negative decision. Make sure you have
-                  entered a clear justification before confirming.
-                  {justification ? "" : " No justification provided yet."}
+                  Cette action enregistre une décision négative. Assurez-vous
+                  d'avoir saisi une justification claire avant de confirmer.
+                  {justification
+                    ? ""
+                    : " Aucune justification saisie pour l'instant."}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogCancel>Annuler</AlertDialogCancel>
                 <AlertDialogAction
                   onClick={() => handle("reject")}
                   className="bg-destructive text-white hover:bg-destructive/90"
                 >
-                  Reject case
+                  Refuser le dossier
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>

@@ -77,7 +77,7 @@ test.describe("Cockpit analyste — parcours & apparatus de mesure", () => {
     // The decision must go through the confirmation modal — it is not recorded on the first click.
     const dialog = page.getByRole("alertdialog");
     await expect(dialog).toBeVisible();
-    await dialog.getByRole("button", { name: "Reject case" }).click();
+    await dialog.getByRole("button", { name: "Refuser le dossier" }).click();
 
     await expect
       .poll(

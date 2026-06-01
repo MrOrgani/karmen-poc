@@ -41,7 +41,7 @@ export function CaseHeader({ case: caseData }: Props) {
         to="/"
         className="inline-flex items-center gap-1.5 text-sm text-karmen-blue hover:underline font-medium"
       >
-        <ArrowLeft aria-hidden className="h-3.5 w-3.5" /> All cases
+        <ArrowLeft aria-hidden className="h-3.5 w-3.5" /> Tous les dossiers
       </Link>
 
       <div className="rounded-2xl bg-karmen-pale-blue border border-karmen-border-blue/60 p-6 md:p-8">
